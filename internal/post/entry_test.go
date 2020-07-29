@@ -2,12 +2,7 @@ package post
 
 import (
 	"testing"
-	// "bytes"
-	// "fmt"
-	// "io/ioutil"
-	// "time"
-
-	// "gopkg.in/yaml.v2"
+	"reflect"
 )
 
 
@@ -33,22 +28,32 @@ import (
 
 
 func TestStripPageConfig(t *testing.T) {
-	testStr := []byte(`<!-- CONFIG
-	frog
-	CONFIG -->
-	<p>Hello</p>`)
-
-    output := stripPageConfig(testStr)
-    if string(output) != `<p>Hello</p>` {
-        t.Errorf("stripPageConfig failed to properly strip config")
+	type test struct {
+        input string
+        want  string
     }
-}
 
-func TestStripPageConfig2(t *testing.T) {
-	testStr := []byte(`<p>Hello</p>`)
-
-    output := stripPageConfig(testStr)
-    if string(output) != `<p>Hello</p>` {
-        t.Errorf("stripPageConfig changed file with no config")
+    tests := []test{
+        { 	input: `<!-- CONFIG
+frog
+CONFIG --> 
+<p>Hello</p>`, 
+		  	want: `<p>Hello</p>`,
+		},
+		{ 	input: `<p>Hello</p>`, 
+			want: `<p>Hello</p>`,
+		},
+		{ 	input: `<!-- comment --> 
+		<p>Hello</p>`, 
+			want: `<!-- comment --> 
+		<p>Hello</p>`,
+		},
     }
+
+    for _, tc := range tests {
+        output := string(stripPageConfig([]byte(tc.input)))
+        if !reflect.DeepEqual(tc.want, output) {
+            t.Errorf("expected: %v, got: %v", tc.want, output)
+        }
+	}
 }

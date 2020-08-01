@@ -10,8 +10,8 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/nthnca/ssg/internal/post"
-	"github.com/nthnca/ssg/internal/util"
+	"github.com/shortmoose/ssg/internal/post"
+	"github.com/shortmoose/ssg/internal/util"
 )
 
 var (

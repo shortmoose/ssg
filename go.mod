@@ -1,4 +1,4 @@
-module github.com/nthnca/ssg
+module github.com/shortmoose/ssg
 
 go 1.14
 

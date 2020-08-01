@@ -17,7 +17,7 @@ import (
 var (
 	defaultTitle = "Web Site Title"
 	defaultImage = "/img/logo.jpg"
-	siteURL      = "https://thisisntarealurl.com"
+	steURL       = "https://thisisntarealurl.com"
 	author       = "Name"
 )
 

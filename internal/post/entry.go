@@ -102,7 +102,8 @@ func GetPageConfig(filepath, sitepath string, siteinfo SiteInfo) (Entry, error) 
 	return cfg, nil
 }
 
-// ByDate should normally be used as part of sort. So sort.Sort(ByDate([]Entry)).
+// ByDate should normally be used as part of sort. So
+// sort.Sort(ByDate([]Entry)).
 type ByDate []Entry
 
 func (s ByDate) Len() int {

@@ -20,7 +20,7 @@ jobs:
       run: go get -v -t -d ./...
 
     - name: Validate Formatting
-      run: find . -name "*.go" | xargs gofmt -s -l
+      run: test -z $(find . -name "*.go" | xargs gofmt -s -l)
 
     - name: Build
       run: go build -v ./...

@@ -75,7 +75,7 @@ func createAtomFeed(path string, feed feed, configs []post.Entry) error {
 	return nil
 }
 
-func PostIndexEntry(e post.Entry) string {
+func postIndexEntry(e post.Entry) string {
 	var cnt string
 	img := e.Image
 	if img == "" {
@@ -97,17 +97,17 @@ func PostIndexEntry(e post.Entry) string {
 	return cnt
 }
 
-func PostIndexEntryKey(key string, configs []post.Entry) (string, error) {
+func postIndexEntryKey(key string, configs []post.Entry) (string, error) {
 	for i := range configs {
 		if configs[i].SitePath == key {
-			return PostIndexEntry(configs[i]), nil
+			return postIndexEntry(configs[i]), nil
 		}
 	}
 
 	return "", fmt.Errorf("invalid key: ''%s'", key)
 }
 
-func BuildIndex(path string, cfg post.Entry, configs []post.Entry) error {
+func buildIndex(path string, cfg post.Entry, configs []post.Entry) error {
 	cfgs := []post.Entry{}
 	for i := range configs {
 		if configs[i].Date != "" {
@@ -121,11 +121,11 @@ func BuildIndex(path string, cfg post.Entry, configs []post.Entry) error {
 
 	cnt := ""
 	for _, e := range cfgs {
-		cnt += PostIndexEntry(e)
+		cnt += postIndexEntry(e)
 	}
 
 	cfg.Content = []byte(cnt)
-	err := BuildPage(path, cfg, configs)
+	err := buildPage(path, cfg, configs)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func BuildIndex(path string, cfg post.Entry, configs []post.Entry) error {
 	return nil
 }
 
-func BuildPage(dest string, cfg post.Entry, configs []post.Entry) error {
+func buildPage(dest string, cfg post.Entry, configs []post.Entry) error {
 	pre, err := ioutil.ReadFile("templates/pre.html")
 	if err != nil {
 		return err
@@ -155,24 +155,24 @@ func BuildPage(dest string, cfg post.Entry, configs []post.Entry) error {
 
 	body := cfg.Content
 
-	var err_strings []string
+	var errStrings []string
 	re := regexp.MustCompile(`<!--/.*-->`)
 	body = re.ReplaceAllFunc(body, func(a []byte) []byte {
 		key := string(a[4 : len(a)-3])
-		html, err := PostIndexEntryKey(key, configs)
+		html, err := postIndexEntryKey(key, configs)
 		if err != nil {
-			err_strings = append(err_strings, key)
+			errStrings = append(errStrings, key)
 			return []byte("")
 		}
 		return []byte(html)
 	})
-	if len(err_strings) != 0 {
-		return fmt.Errorf("Invalid keys: %v", err_strings)
+	if len(errStrings) != 0 {
+		return fmt.Errorf("Invalid keys: %v", errStrings)
 	}
 
 	var extra string
 	for _, k := range cfg.RelatedPosts {
-		html, err := PostIndexEntryKey(k, configs)
+		html, err := postIndexEntryKey(k, configs)
 		if err != nil {
 			return err
 		}
@@ -245,12 +245,12 @@ func walk() error {
 
 	for _, cfg := range configs {
 		if cfg.Type == "index" {
-			err := BuildIndex("website/posts"+cfg.SitePath, cfg, configs)
+			err := buildIndex("website/posts"+cfg.SitePath, cfg, configs)
 			if err != nil {
 				return fmt.Errorf("parsing %s: %w", cfg.FilePath, err)
 			}
 		} else {
-			err = BuildPage("website/posts"+cfg.SitePath, cfg, configs)
+			err = buildPage("website/posts"+cfg.SitePath, cfg, configs)
 			if err != nil {
 				return fmt.Errorf("parsing %s: %w", cfg.FilePath, err)
 			}

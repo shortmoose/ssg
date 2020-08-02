@@ -64,6 +64,9 @@ func createAtomFeed(path string, feed feed, configs []post.Entry) error {
 	s += fmt.Sprintf("</feed>\n")
 
 	body := []byte(s)
+	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
+	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
+	body = bytes.ReplaceAll(body, []byte("href=\"/"), []byte("href=\""+cfg.URL+"/"))
 
 	err := ioutil.WriteFile(path, body, 0644)
 	if err != nil {
@@ -142,12 +145,12 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 	pre = bytes.Replace(pre, []byte("<!--IMAGE-->"), []byte(ent.Image), -1)
 
 	meta := ""
-	if ent.Image != ent.Image {
+	if ent.Image != cfg.Image {
 		meta = "<meta property=\"og:image\" content=\"" + ent.Image + "\" />\n  "
 	}
 	pre = bytes.Replace(pre, []byte("<!--META-->\n"), []byte(meta), -1)
 
-	if ent.Title != ent.Title {
+	if ent.Title != cfg.Title {
 		pre = append(pre, []byte("<h1>"+ent.Title+"</h1>\n")...)
 	}
 
@@ -187,8 +190,10 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 	if err != nil {
 		return fmt.Errorf("ReadFile :%w", err)
 	}
-
 	body = append(pre, append(body, post...)...)
+
+	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
+	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
 
 	err = ioutil.WriteFile(dest, body, 0644)
 	if err != nil {
@@ -203,7 +208,7 @@ func validateImagesExist(configs []post.Entry) error {
 	for _, ent := range configs {
 		re := regexp.MustCompile(`/(img|pdf)/[^"']*`)
 		for _, url := range re.FindAll([]byte(string(ent.Content)+" "+ent.Image), -1) {
-			urlstr := "storageurl" + string(url)[4:]
+			urlstr := cfg.ImageURL + string(url)[4:]
 			m[urlstr] = true
 		}
 	}

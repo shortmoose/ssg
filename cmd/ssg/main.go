@@ -10,18 +10,16 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/nthnca/ssg/internal/post"
-	"github.com/nthnca/ssg/internal/util"
+	"github.com/shortmoose/ssg/internal/config"
+	"github.com/shortmoose/ssg/internal/post"
+	"github.com/shortmoose/ssg/internal/util"
 )
 
 var (
-	defaultTitle = "Web Site Title"
-	defaultImage = "/img/logo.jpg"
-	siteURL      = "https://thisisntarealurl.com"
-	author       = "Name"
+	cfg config.Config
 )
 
-// Config TODO
+// feed TODO
 type feed struct {
 	SiteURL   string
 	SiteTitle string
@@ -30,26 +28,26 @@ type feed struct {
 }
 
 func createAtomFeed(path string, feed feed, configs []post.Entry) error {
-	cfgs := []post.Entry{}
+	ents := []post.Entry{}
 	for i := range configs {
 		if configs[i].Date != "" {
-			cfgs = append(cfgs, configs[i])
+			ents = append(ents, configs[i])
 		}
 	}
-	if len(cfgs) == 0 {
+	if len(ents) == 0 {
 		return fmt.Errorf("Can't create XML feed, no entries")
 	}
-	sort.Sort(post.ByDate(cfgs))
+	sort.Sort(post.ByDate(ents))
 
 	s := ""
 	s += fmt.Sprintf("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
 	s += fmt.Sprintf("<feed xmlns=\"http://www.w3.org/2005/Atom\">\n")
 	s += fmt.Sprintf("  <title>%s</title>\n", feed.SiteTitle)
 	s += fmt.Sprintf("  <link href=\"%s/\" />\n", feed.SiteURL)
-	s += fmt.Sprintf("  <updated>%s</updated>\n", cfgs[0].Date)
+	s += fmt.Sprintf("  <updated>%s</updated>\n", ents[0].Date)
 	s += fmt.Sprintf("  <id>%s</id>\n", feed.SiteID)
 
-	for _, e := range cfgs {
+	for _, e := range ents {
 		if e.Date != "" {
 			s += fmt.Sprintf("<entry>\n")
 			s += fmt.Sprintf("  <title>%s</title>\n", e.Title)
@@ -66,6 +64,9 @@ func createAtomFeed(path string, feed feed, configs []post.Entry) error {
 	s += fmt.Sprintf("</feed>\n")
 
 	body := []byte(s)
+	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
+	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
+	body = bytes.ReplaceAll(body, []byte("href=\"/"), []byte("href=\""+cfg.URL+"/"))
 
 	err := ioutil.WriteFile(path, body, 0644)
 	if err != nil {
@@ -75,11 +76,11 @@ func createAtomFeed(path string, feed feed, configs []post.Entry) error {
 	return nil
 }
 
-func PostIndexEntry(e post.Entry) string {
+func postIndexEntry(e post.Entry) string {
 	var cnt string
 	img := e.Image
 	if img == "" {
-		img = defaultImage
+		img = cfg.Image
 	}
 	cnt += "\n\n"
 	cnt += "<div style=\"width: 100%; overflow: hidden;\">"
@@ -97,35 +98,35 @@ func PostIndexEntry(e post.Entry) string {
 	return cnt
 }
 
-func PostIndexEntryKey(key string, configs []post.Entry) (string, error) {
+func postIndexEntryKey(key string, configs []post.Entry) (string, error) {
 	for i := range configs {
 		if configs[i].SitePath == key {
-			return PostIndexEntry(configs[i]), nil
+			return postIndexEntry(configs[i]), nil
 		}
 	}
 
 	return "", fmt.Errorf("invalid key: ''%s'", key)
 }
 
-func BuildIndex(path string, cfg post.Entry, configs []post.Entry) error {
-	cfgs := []post.Entry{}
+func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
+	ents := []post.Entry{}
 	for i := range configs {
 		if configs[i].Date != "" {
-			cfgs = append(cfgs, configs[i])
+			ents = append(ents, configs[i])
 		}
 	}
-	if len(cfgs) == 0 {
+	if len(ents) == 0 {
 		return fmt.Errorf("Can't create XML feed, no entries")
 	}
-	sort.Sort(post.ByDate(cfgs))
+	sort.Sort(post.ByDate(ents))
 
 	cnt := ""
-	for _, e := range cfgs {
-		cnt += PostIndexEntry(e)
+	for _, e := range ents {
+		cnt += postIndexEntry(e)
 	}
 
-	cfg.Content = []byte(cnt)
-	err := BuildPage(path, cfg, configs)
+	ent.Content = []byte(cnt)
+	err := buildPage(path, ent, configs)
 	if err != nil {
 		return err
 	}
@@ -133,46 +134,46 @@ func BuildIndex(path string, cfg post.Entry, configs []post.Entry) error {
 	return nil
 }
 
-func BuildPage(dest string, cfg post.Entry, configs []post.Entry) error {
+func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 	pre, err := ioutil.ReadFile("templates/pre.html")
 	if err != nil {
 		return err
 	}
 
-	pre = bytes.Replace(pre, []byte("<!--TITLE-->"), []byte(cfg.Title), -1)
-	pre = bytes.Replace(pre, []byte("<!--DESCRIPTION-->"), []byte(cfg.Snippet), -1)
-	pre = bytes.Replace(pre, []byte("<!--IMAGE-->"), []byte(cfg.Image), -1)
+	pre = bytes.Replace(pre, []byte("<!--TITLE-->"), []byte(ent.Title), -1)
+	pre = bytes.Replace(pre, []byte("<!--DESCRIPTION-->"), []byte(ent.Snippet), -1)
+	pre = bytes.Replace(pre, []byte("<!--IMAGE-->"), []byte(ent.Image), -1)
 
 	meta := ""
-	if cfg.Image != defaultImage {
-		meta = "<meta property=\"og:image\" content=\"" + cfg.Image + "\" />\n  "
+	if ent.Image != cfg.Image {
+		meta = "<meta property=\"og:image\" content=\"" + ent.Image + "\" />\n  "
 	}
 	pre = bytes.Replace(pre, []byte("<!--META-->\n"), []byte(meta), -1)
 
-	if cfg.Title != defaultTitle {
-		pre = append(pre, []byte("<h1>"+cfg.Title+"</h1>\n")...)
+	if ent.Title != cfg.Title {
+		pre = append(pre, []byte("<h1>"+ent.Title+"</h1>\n")...)
 	}
 
-	body := cfg.Content
+	body := ent.Content
 
-	var err_strings []string
+	var errStrings []string
 	re := regexp.MustCompile(`<!--/.*-->`)
 	body = re.ReplaceAllFunc(body, func(a []byte) []byte {
 		key := string(a[4 : len(a)-3])
-		html, err := PostIndexEntryKey(key, configs)
+		html, err := postIndexEntryKey(key, configs)
 		if err != nil {
-			err_strings = append(err_strings, key)
+			errStrings = append(errStrings, key)
 			return []byte("")
 		}
 		return []byte(html)
 	})
-	if len(err_strings) != 0 {
-		return fmt.Errorf("Invalid keys: %v", err_strings)
+	if len(errStrings) != 0 {
+		return fmt.Errorf("Invalid keys: %v", errStrings)
 	}
 
 	var extra string
-	for _, k := range cfg.RelatedPosts {
-		html, err := PostIndexEntryKey(k, configs)
+	for _, k := range ent.RelatedPosts {
+		html, err := postIndexEntryKey(k, configs)
 		if err != nil {
 			return err
 		}
@@ -189,8 +190,10 @@ func BuildPage(dest string, cfg post.Entry, configs []post.Entry) error {
 	if err != nil {
 		return fmt.Errorf("ReadFile :%w", err)
 	}
-
 	body = append(pre, append(body, post...)...)
+
+	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
+	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
 
 	err = ioutil.WriteFile(dest, body, 0644)
 	if err != nil {
@@ -202,10 +205,10 @@ func BuildPage(dest string, cfg post.Entry, configs []post.Entry) error {
 
 func validateImagesExist(configs []post.Entry) error {
 	m := map[string]bool{}
-	for _, cfg := range configs {
+	for _, ent := range configs {
 		re := regexp.MustCompile(`/(img|pdf)/[^"']*`)
-		for _, url := range re.FindAll([]byte(string(cfg.Content)+" "+cfg.Image), -1) {
-			urlstr := "storageurl" + string(url)[4:]
+		for _, url := range re.FindAll([]byte(string(ent.Content)+" "+ent.Image), -1) {
+			urlstr := cfg.ImageURL + string(url)[4:]
 			m[urlstr] = true
 		}
 	}
@@ -226,33 +229,33 @@ func validateImagesExist(configs []post.Entry) error {
 
 func walk() error {
 	var siteinfo post.SiteInfo
-	siteinfo.DefaultTitle = defaultTitle
-	siteinfo.DefaultImage = defaultImage
+	siteinfo.DefaultTitle = cfg.Title
+	siteinfo.DefaultImage = cfg.Image
 
 	var configs []post.Entry
 	err := util.Walk("posts", func(path string, info os.FileInfo) error {
-		cfg, err := post.GetPageConfig(path, path[5:], siteinfo)
+		ent, err := post.GetPageConfig(path, path[5:], siteinfo)
 		if err != nil {
 			return err
 		}
 
-		configs = append(configs, cfg)
+		configs = append(configs, ent)
 		return nil
 	})
 	if err != nil {
 		return err
 	}
 
-	for _, cfg := range configs {
-		if cfg.Type == "index" {
-			err := BuildIndex("website/posts"+cfg.SitePath, cfg, configs)
+	for _, ent := range configs {
+		if ent.Type == "index" {
+			err := buildIndex("website/posts"+ent.SitePath, ent, configs)
 			if err != nil {
-				return fmt.Errorf("parsing %s: %w", cfg.FilePath, err)
+				return fmt.Errorf("parsing %s: %w", ent.FilePath, err)
 			}
 		} else {
-			err = BuildPage("website/posts"+cfg.SitePath, cfg, configs)
+			err = buildPage("website/posts"+ent.SitePath, ent, configs)
 			if err != nil {
-				return fmt.Errorf("parsing %s: %w", cfg.FilePath, err)
+				return fmt.Errorf("parsing %s: %w", ent.FilePath, err)
 			}
 		}
 	}
@@ -263,10 +266,10 @@ func walk() error {
 	}
 
 	var feed feed
-	feed.SiteTitle = defaultTitle
-	feed.SiteURL = siteURL
-	feed.SiteID = siteURL + "/"
-	feed.Author = author
+	feed.SiteTitle = cfg.Title
+	feed.SiteURL = cfg.URL
+	feed.SiteID = cfg.URL + "/"
+	feed.Author = cfg.Author
 
 	err = createAtomFeed("website/atom.xml", feed, configs)
 	if err != nil {
@@ -277,7 +280,14 @@ func walk() error {
 }
 
 func main() {
-	err := walk()
+	cfgTmp, err := config.GetConfig("ssg.yaml")
+	if err != nil {
+		log.Fatalf("%v\n", err)
+	}
+
+	cfg = cfgTmp
+
+	err = walk()
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}

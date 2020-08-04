@@ -1,11 +1,9 @@
 package post
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
-
-
 
 // test := `<!-- CONFIG
 // title: Title
@@ -26,34 +24,33 @@ import (
 // <p class="sig">Creator</p>
 // <p class="date">Published on March 9, 2020</p>`
 
-
 func TestStripPageConfig(t *testing.T) {
 	type test struct {
-        input string
-        want  string
-    }
+		input string
+		want  string
+	}
 
-    tests := []test{
-        { 	input: `<!-- CONFIG
+	tests := []test{
+		{input: `<!-- CONFIG
 frog
 CONFIG --> 
-<p>Hello</p>`, 
-		  	want: `<p>Hello</p>`,
-		},
-		{ 	input: `<p>Hello</p>`, 
+<p>Hello</p>`,
 			want: `<p>Hello</p>`,
 		},
-		{ 	input: `<!-- comment --> 
-		<p>Hello</p>`, 
+		{input: `<p>Hello</p>`,
+			want: `<p>Hello</p>`,
+		},
+		{input: `<!-- comment --> 
+		<p>Hello</p>`,
 			want: `<!-- comment --> 
 		<p>Hello</p>`,
 		},
-    }
+	}
 
-    for _, tc := range tests {
-        output := string(stripPageConfig([]byte(tc.input)))
-        if !reflect.DeepEqual(tc.want, output) {
-            t.Errorf("expected: %v, got: %v", tc.want, output)
-        }
+	for _, tc := range tests {
+		output := string(stripPageConfig([]byte(tc.input)))
+		if !reflect.DeepEqual(tc.want, output) {
+			t.Errorf("expected: %v, got: %v", tc.want, output)
+		}
 	}
 }

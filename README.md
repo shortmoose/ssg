@@ -5,3 +5,5 @@
 [![Releases](https://img.shields.io/github/release-pre/shortmoose/ssg.svg?sort=semver)](https://github.com/shortmoose/ssg/releases)
 [![LICENSE](https://img.shields.io/github/license/shortmoose/ssg.svg)](https://github.com/shortmoose/ssg/blob/master/LICENSE)
 [![Go](https://github.com/shortmoose/ssg/workflows/Go/badge.svg)](https://github.com/shortmoose/ssg/actions?query=workflow%3AGo)
+
+Test push from remote branch

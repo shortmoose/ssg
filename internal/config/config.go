@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 
 	"gopkg.in/yaml.v2"
@@ -16,10 +17,10 @@ type Config struct {
 	ImageURL string `yaml:"image-url"`
 }
 
-func GetConfig(src string) (Config, error) {
+func GetConfig(src io.Reader) (Config, error) {
 	var cfg Config
 
-	body, err := ioutil.ReadFile(src)
+	body, err := ioutil.ReadAll(src)
 	if err != nil {
 		return cfg, fmt.Errorf("reading file %s: %w", src, err)
 	}

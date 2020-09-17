@@ -280,7 +280,13 @@ func walk() error {
 }
 
 func main() {
-	cfgTmp, err := config.GetConfig("ssg.yaml")
+	handle, err := os.Open("ssg.yaml")
+	if err != nil {
+		log.Fatalf("%v\n", err)
+	}
+	defer handle.Close()
+
+	cfgTmp, err := config.GetConfig(handle)
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}

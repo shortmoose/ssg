@@ -252,6 +252,17 @@ func walk() error {
 			if err != nil {
 				return fmt.Errorf("parsing %s: %w", ent.FilePath, err)
 			}
+		} else if ent.Type == "atom" {
+			var feed feed
+			feed.SiteTitle = cfg.Title
+			feed.SiteURL = cfg.URL
+			feed.SiteID = cfg.URL + "/"
+			feed.Author = cfg.Author
+
+			err = createAtomFeed("website/posts"+ent.SitePath, feed, configs)
+			if err != nil {
+				return err
+			}
 		} else {
 			err = buildPage("website/posts"+ent.SitePath, ent, configs)
 			if err != nil {
@@ -261,17 +272,6 @@ func walk() error {
 	}
 
 	err = validateImagesExist(configs)
-	if err != nil {
-		return err
-	}
-
-	var feed feed
-	feed.SiteTitle = cfg.Title
-	feed.SiteURL = cfg.URL
-	feed.SiteID = cfg.URL + "/"
-	feed.Author = cfg.Author
-
-	err = createAtomFeed("website/atom.xml", feed, configs)
 	if err != nil {
 		return err
 	}

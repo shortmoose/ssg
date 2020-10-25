@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Post 1</title>
+  <title>Test Title</title>
 </head>
 <body>
-<h1>Post 1</h1>
-<p>Years ago</p>
-
 
 
 <div style="width: 100%; overflow: hidden;"><div style="width: 170px; float: left;"><a href="/p2"><img class="himg" alt="thumbnail" src="/foo"></a></div><div style="margin-left: 190px;"><a href="/p2"><b>Post 2</b></a><p>Post 2 snippet&hellip;</p></div></div><br />
 
+
+<div style="width: 100%; overflow: hidden;"><div style="width: 170px; float: left;"><a href="/p1"><img class="himg" alt="thumbnail" src="/foo"></a></div><div style="margin-left: 190px;"><a href="/p1"><b>Post 1</b></a><p>Years ago, I started to&hellip;</p></div></div><br />
 </body>
 </html>

@@ -116,7 +116,7 @@ func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
 		}
 	}
 	if len(ents) == 0 {
-		return fmt.Errorf("Can't create XML feed, no entries")
+		return fmt.Errorf("Can't create index, no entries")
 	}
 	sort.Sort(post.ByDate(ents))
 

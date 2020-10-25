@@ -171,6 +171,22 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 		return fmt.Errorf("Invalid keys: %v", errStrings)
 	}
 
+	re2 := regexp.MustCompile(`<!--MACRO:.*-->`)
+	body = re2.ReplaceAllFunc(body, func(a []byte) []byte {
+		key := string(a[10 : len(a)-3])
+
+		post, err := ioutil.ReadFile("templates/macros/" + key)
+		if err != nil {
+			errStrings = append(errStrings, key)
+			return []byte("")
+		}
+
+		return []byte(post)
+	})
+	if len(errStrings) != 0 {
+		return fmt.Errorf("Invalid keys: %v", errStrings)
+	}
+
 	var extra string
 	for _, k := range ent.RelatedPosts {
 		html, err := postIndexEntryKey(k, configs)

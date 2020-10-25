@@ -11,5 +11,8 @@
 
 <div style="width: 100%; overflow: hidden;"><div style="width: 170px; float: left;"><a href="/p2"><img class="himg" alt="thumbnail" src="/foo"></a></div><div style="margin-left: 190px;"><a href="/p2"><b>Post 2</b></a><p>Post 2 snippet&hellip;</p></div></div><br />
 
+
+This is the replacement text.
+
 </body>
 </html>

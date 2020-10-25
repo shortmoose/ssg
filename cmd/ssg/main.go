@@ -116,7 +116,7 @@ func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
 		}
 	}
 	if len(ents) == 0 {
-		return fmt.Errorf("Can't create XML feed, no entries")
+		return fmt.Errorf("Can't create index, no entries")
 	}
 	sort.Sort(post.ByDate(ents))
 
@@ -166,6 +166,22 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 			return []byte("")
 		}
 		return []byte(html)
+	})
+	if len(errStrings) != 0 {
+		return fmt.Errorf("Invalid keys: %v", errStrings)
+	}
+
+	re2 := regexp.MustCompile(`<!--MACRO:.*-->`)
+	body = re2.ReplaceAllFunc(body, func(a []byte) []byte {
+		key := string(a[10 : len(a)-3])
+
+		post, err := ioutil.ReadFile("templates/macros/" + key)
+		if err != nil {
+			errStrings = append(errStrings, key)
+			return []byte("")
+		}
+
+		return []byte(post)
 	})
 	if len(errStrings) != 0 {
 		return fmt.Errorf("Invalid keys: %v", errStrings)

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+rm -fr example/website
+
+mkdir -p example/website/posts/
+
+cd example && ../ssg; cd ..

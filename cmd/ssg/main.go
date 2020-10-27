@@ -27,7 +27,7 @@ type feed struct {
 	Author    string
 }
 
-func createAtomFeed(path string, feed feed, configs []post.Entry) error {
+func createAtomFeed(feed feed, configs []post.Entry) ([]byte, error) {
 	ents := []post.Entry{}
 	for i := range configs {
 		if configs[i].Date != "" {
@@ -35,7 +35,7 @@ func createAtomFeed(path string, feed feed, configs []post.Entry) error {
 		}
 	}
 	if len(ents) == 0 {
-		return fmt.Errorf("Can't create XML feed, no entries")
+		return nil, fmt.Errorf("Can't create XML feed, no entries")
 	}
 	sort.Sort(post.ByDate(ents))
 
@@ -68,12 +68,7 @@ func createAtomFeed(path string, feed feed, configs []post.Entry) error {
 	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
 	body = bytes.ReplaceAll(body, []byte("href=\"/"), []byte("href=\""+cfg.URL+"/"))
 
-	err := ioutil.WriteFile(path, body, 0644)
-	if err != nil {
-		return fmt.Errorf("WriteFile :%w", err)
-	}
-
-	return nil
+	return body, nil
 }
 
 func postIndexEntry(e post.Entry) string {
@@ -275,9 +270,14 @@ func walk() error {
 			feed.SiteID = cfg.URL + "/"
 			feed.Author = cfg.Author
 
-			err = createAtomFeed("website/posts"+ent.SitePath, feed, configs)
+			body, err := createAtomFeed(feed, configs)
 			if err != nil {
 				return err
+			}
+
+			err = ioutil.WriteFile("website/posts"+ent.SitePath, body, 0644)
+			if err != nil {
+				return fmt.Errorf("WriteFile :%w", err)
 			}
 		} else {
 			err = buildPage("website/posts"+ent.SitePath, ent, configs)

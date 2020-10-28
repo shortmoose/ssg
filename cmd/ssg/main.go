@@ -19,58 +19,6 @@ var (
 	cfg config.Config
 )
 
-// feed TODO
-type feed struct {
-	SiteURL   string
-	SiteTitle string
-	SiteID    string
-	Author    string
-}
-
-func createAtomFeed(feed feed, configs []post.Entry) ([]byte, error) {
-	ents := []post.Entry{}
-	for i := range configs {
-		if configs[i].Date != "" {
-			ents = append(ents, configs[i])
-		}
-	}
-	if len(ents) == 0 {
-		return nil, fmt.Errorf("Can't create XML feed, no entries")
-	}
-	sort.Sort(post.ByDate(ents))
-
-	s := ""
-	s += fmt.Sprintf("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
-	s += fmt.Sprintf("<feed xmlns=\"http://www.w3.org/2005/Atom\">\n")
-	s += fmt.Sprintf("  <title>%s</title>\n", feed.SiteTitle)
-	s += fmt.Sprintf("  <link href=\"%s/\" />\n", feed.SiteURL)
-	s += fmt.Sprintf("  <updated>%s</updated>\n", ents[0].Date)
-	s += fmt.Sprintf("  <id>%s</id>\n", feed.SiteID)
-
-	for _, e := range ents {
-		if e.Date != "" {
-			s += fmt.Sprintf("<entry>\n")
-			s += fmt.Sprintf("  <title>%s</title>\n", e.Title)
-			s += fmt.Sprintf("  <link href=\"%s%s\" />\n", feed.SiteURL, e.SitePath)
-			s += fmt.Sprintf("  <updated>%s</updated>\n", e.Date)
-			s += fmt.Sprintf("  <id>%s%s</id>\n", feed.SiteURL, e.SitePath)
-			s += fmt.Sprintf("  <author><name>%s</name></author>\n", feed.Author)
-			s += fmt.Sprintf("  <content type=\"html\"><![CDATA[\n")
-			s += fmt.Sprintf("%s\n", e.Content)
-			s += fmt.Sprintf("  ]]></content>\n")
-			s += fmt.Sprintf("</entry>\n")
-		}
-	}
-	s += fmt.Sprintf("</feed>\n")
-
-	body := []byte(s)
-	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
-	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
-	body = bytes.ReplaceAll(body, []byte("href=\"/"), []byte("href=\""+cfg.URL+"/"))
-
-	return body, nil
-}
-
 func postIndexEntry(e post.Entry) string {
 	var cnt string
 	img := e.Image
@@ -166,9 +114,9 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 		return fmt.Errorf("Invalid keys: %v", errStrings)
 	}
 
-	re2 := regexp.MustCompile(`<!--MACRO:.*-->`)
+	re2 := regexp.MustCompile(`<!--MACRO_WEB:.*-->`)
 	body = re2.ReplaceAllFunc(body, func(a []byte) []byte {
-		key := string(a[10 : len(a)-3])
+		key := string(a[14 : len(a)-3])
 
 		post, err := ioutil.ReadFile("templates/macros/" + key)
 		if err != nil {
@@ -202,9 +150,6 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 		return fmt.Errorf("ReadFile :%w", err)
 	}
 	body = append(pre, append(body, post...)...)
-
-	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
-	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
 
 	err = ioutil.WriteFile(dest, body, 0644)
 	if err != nil {
@@ -250,6 +195,26 @@ func walk() error {
 			return err
 		}
 
+		ent.Content = bytes.ReplaceAll(ent.Content, []byte("/img/"), []byte(cfg.ImageURL+"/"))
+		ent.Content = bytes.ReplaceAll(ent.Content, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
+
+		var errStrings []string
+		re2 := regexp.MustCompile(`<!--MACRO:.*-->`)
+		ent.Content = re2.ReplaceAllFunc(ent.Content, func(a []byte) []byte {
+			key := string(a[10 : len(a)-3])
+
+			post, err := ioutil.ReadFile("templates/macros/" + key)
+			if err != nil {
+				errStrings = append(errStrings, key)
+				return []byte("")
+			}
+
+			return []byte(post)
+		})
+		if len(errStrings) != 0 {
+			return fmt.Errorf("Invalid keys: %v", errStrings)
+		}
+
 		configs = append(configs, ent)
 		return nil
 	})
@@ -264,13 +229,13 @@ func walk() error {
 				return fmt.Errorf("parsing %s: %w", ent.FilePath, err)
 			}
 		} else if ent.Type == "atom" {
-			var feed feed
+			var feed util.Feed
 			feed.SiteTitle = cfg.Title
 			feed.SiteURL = cfg.URL
 			feed.SiteID = cfg.URL + "/"
 			feed.Author = cfg.Author
 
-			body, err := createAtomFeed(feed, configs)
+			body, err := util.CreateAtomFeed(feed, configs)
 			if err != nil {
 				return err
 			}

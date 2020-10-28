@@ -145,6 +145,9 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 	}
 	body = append(body, []byte(extra)...)
 
+	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
+	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
+
 	post, err := ioutil.ReadFile("templates/post.html")
 	if err != nil {
 		return fmt.Errorf("ReadFile :%w", err)
@@ -195,9 +198,6 @@ func walk() error {
 			return err
 		}
 
-		ent.Content = bytes.ReplaceAll(ent.Content, []byte("/img/"), []byte(cfg.ImageURL+"/"))
-		ent.Content = bytes.ReplaceAll(ent.Content, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
-
 		var errStrings []string
 		re2 := regexp.MustCompile(`<!--MACRO:.*-->`)
 		ent.Content = re2.ReplaceAllFunc(ent.Content, func(a []byte) []byte {
@@ -239,6 +239,9 @@ func walk() error {
 			if err != nil {
 				return err
 			}
+
+			body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
+			body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
 
 			err = ioutil.WriteFile("website/posts"+ent.SitePath, body, 0644)
 			if err != nil {

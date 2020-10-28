@@ -14,7 +14,6 @@ type Feed struct {
 	SiteTitle string
 	SiteID    string
 	Author    string
-	ImageURL  string
 }
 
 func CreateAtomFeed(feed Feed, configs []post.Entry) ([]byte, error) {
@@ -54,8 +53,6 @@ func CreateAtomFeed(feed Feed, configs []post.Entry) ([]byte, error) {
 	s += fmt.Sprintf("</feed>\n")
 
 	body := []byte(s)
-	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(feed.ImageURL+"/"))
-	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(feed.ImageURL+"/"))
 	body = bytes.ReplaceAll(body, []byte("href=\"/"), []byte("href=\""+feed.SiteURL+"/"))
 
 	return body, nil

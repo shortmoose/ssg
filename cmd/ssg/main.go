@@ -151,9 +151,6 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 	}
 	body = append(pre, append(body, post...)...)
 
-	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
-	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
-
 	err = ioutil.WriteFile(dest, body, 0644)
 	if err != nil {
 		return fmt.Errorf("WriteFile :%w", err)
@@ -198,6 +195,9 @@ func walk() error {
 			return err
 		}
 
+		ent.Content = bytes.ReplaceAll(ent.Content, []byte("/img/"), []byte(cfg.ImageURL+"/"))
+		ent.Content = bytes.ReplaceAll(ent.Content, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
+
 		configs = append(configs, ent)
 		return nil
 	})
@@ -217,7 +217,6 @@ func walk() error {
 			feed.SiteURL = cfg.URL
 			feed.SiteID = cfg.URL + "/"
 			feed.Author = cfg.Author
-			feed.ImageURL = cfg.ImageURL
 
 			body, err := util.CreateAtomFeed(feed, configs)
 			if err != nil {

@@ -1,7 +1,6 @@
 package util
 
 import (
-	"bytes"
 	"fmt"
 	"sort"
 
@@ -53,7 +52,6 @@ func CreateAtomFeed(feed Feed, configs []post.Entry) ([]byte, error) {
 	s += fmt.Sprintf("</feed>\n")
 
 	body := []byte(s)
-	body = bytes.ReplaceAll(body, []byte("href=\"/"), []byte("href=\""+feed.SiteURL+"/"))
 
 	return body, nil
 }

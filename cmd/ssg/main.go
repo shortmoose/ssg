@@ -114,9 +114,9 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 		return fmt.Errorf("Invalid keys: %v", errStrings)
 	}
 
-	re2 := regexp.MustCompile(`<!--MACRO:.*-->`)
+	re2 := regexp.MustCompile(`<!--MACRO_WEB:.*-->`)
 	body = re2.ReplaceAllFunc(body, func(a []byte) []byte {
-		key := string(a[10 : len(a)-3])
+		key := string(a[14 : len(a)-3])
 
 		post, err := ioutil.ReadFile("templates/macros/" + key)
 		if err != nil {
@@ -197,6 +197,23 @@ func walk() error {
 
 		ent.Content = bytes.ReplaceAll(ent.Content, []byte("/img/"), []byte(cfg.ImageURL+"/"))
 		ent.Content = bytes.ReplaceAll(ent.Content, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
+
+		var errStrings []string
+		re2 := regexp.MustCompile(`<!--MACRO:.*-->`)
+		ent.Content = re2.ReplaceAllFunc(ent.Content, func(a []byte) []byte {
+			key := string(a[10 : len(a)-3])
+
+			post, err := ioutil.ReadFile("templates/macros/" + key)
+			if err != nil {
+				errStrings = append(errStrings, key)
+				return []byte("")
+			}
+
+			return []byte(post)
+		})
+		if len(errStrings) != 0 {
+			return fmt.Errorf("Invalid keys: %v", errStrings)
+		}
 
 		configs = append(configs, ent)
 		return nil

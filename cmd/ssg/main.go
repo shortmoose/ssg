@@ -145,14 +145,14 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 	}
 	body = append(body, []byte(extra)...)
 
-	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
-	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
-
 	post, err := ioutil.ReadFile("templates/post.html")
 	if err != nil {
 		return fmt.Errorf("ReadFile :%w", err)
 	}
 	body = append(pre, append(body, post...)...)
+
+	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
+	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
 
 	err = ioutil.WriteFile(dest, body, 0644)
 	if err != nil {
@@ -242,6 +242,7 @@ func walk() error {
 
 			body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
 			body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
+			body = bytes.ReplaceAll(body, []byte("href=\"/"), []byte("href=\""+feed.SiteURL+"/"))
 
 			err = ioutil.WriteFile("website/posts"+ent.SitePath, body, 0644)
 			if err != nil {

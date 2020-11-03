@@ -3,13 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
 	"sort"
-	"text/template"
 
 	"github.com/shortmoose/ssg/internal/config"
 	"github.com/shortmoose/ssg/internal/post"

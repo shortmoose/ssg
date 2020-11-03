@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>Test Title</title>
-  <link href="https://doesntexist.com//" />
+  <link href="https://doesntexist.com/" />
   <updated>2020-02-28T22:00:00Z</updated>
-  <id>https://doesntexist.com//</id>
+  <id>https://doesntexist.com/</id>
 <entry>
   <title>Post 2</title>
-  <link href="https://doesntexist.com//p2" />
+  <link href="https://doesntexist.com/p2" />
   <updated>2020-02-28T22:00:00Z</updated>
-  <id>https://doesntexist.com//p2</id>
+  <id>https://doesntexist.com/p2</id>
   <author><name>me</name></author>
   <content type="html"><![CDATA[
 <p>Post 2 Post 2 banana</p>
@@ -17,16 +17,16 @@
 </entry>
 <entry>
   <title>Post 1</title>
-  <link href="https://doesntexist.com//p1" />
+  <link href="https://doesntexist.com/p1" />
   <updated>2020-02-27T22:00:00Z</updated>
-  <id>https://doesntexist.com//p1</id>
+  <id>https://doesntexist.com/p1</id>
   <author><name>me</name></author>
   <content type="html"><![CDATA[
 <p>Years ago</p>
 
 <!--/p2-->
 
-This is the replacement text.
+<a href="https://doesntexist.com/p1">This should link to this page.</a>
 
 
 <!--MACRO_WEB:ad-->

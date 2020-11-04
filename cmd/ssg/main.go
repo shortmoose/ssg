@@ -20,6 +20,14 @@ var (
 	cfg config.Config
 )
 
+type PageData struct {
+	SiteTitle string
+	Title     string
+	Snippet   string
+	Image     string
+	Meta      string
+}
+
 type Foo struct {
 	UrlRelative string
 }
@@ -99,23 +107,21 @@ func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
 }
 
 func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
-	pre, err := ioutil.ReadFile("templates/pre.html")
-	if err != nil {
-		return err
-	}
-
-	pre = bytes.Replace(pre, []byte("<!--TITLE-->"), []byte(ent.Title), -1)
-	pre = bytes.Replace(pre, []byte("<!--DESCRIPTION-->"), []byte(ent.Snippet), -1)
-	pre = bytes.Replace(pre, []byte("<!--IMAGE-->"), []byte(ent.Image), -1)
-
 	meta := ""
 	if ent.Image != cfg.Image {
 		meta = "<meta property=\"og:image\" content=\"" + ent.Image + "\" />\n  "
 	}
-	pre = bytes.Replace(pre, []byte("<!--META-->\n"), []byte(meta), -1)
 
-	if ent.Title != cfg.Title {
-		pre = append(pre, []byte("<h1>"+ent.Title+"</h1>\n")...)
+	var data PageData
+	data.SiteTitle = cfg.Title
+	data.Title = ent.Title
+	data.Snippet = ent.Snippet
+	data.Image = ent.Image
+	data.Meta = meta
+
+	pre, err := expandTemplate("pre", data)
+	if err != nil {
+		return err
 	}
 
 	body := ent.Content

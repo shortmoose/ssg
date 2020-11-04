@@ -24,6 +24,18 @@ type Foo struct {
 	UrlRelative string
 }
 
+func expandTemplate(templateName string, data interface{}) ([]byte, error) {
+	t, err := template.ParseFiles(
+		"templates/" + templateName + ".tmpl")
+	if err != nil {
+		return nil, err
+	}
+
+	out := new(bytes.Buffer)
+	err = t.Execute(out, data)
+	return out.Bytes(), err
+}
+
 func expandMacro(key, path string) ([]byte, error) {
 	t, err := template.ParseFiles("templates/macros/" + key + ".tmpl")
 	if err != nil {

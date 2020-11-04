@@ -24,6 +24,13 @@ type Foo struct {
 	UrlRelative string
 }
 
+type Foo2 struct {
+	UrlRelative string
+	ImagePath   string
+	Title       string
+	Snippet     string
+}
+
 func expandTemplate(templateName string, data interface{}) ([]byte, error) {
 	t, err := template.ParseFiles(
 		"templates/" + templateName + ".tmpl")
@@ -36,39 +43,10 @@ func expandTemplate(templateName string, data interface{}) ([]byte, error) {
 	return out.Bytes(), err
 }
 
-func expandMacro(key, path string) ([]byte, error) {
-	t, err := template.ParseFiles("templates/macros/" + key + ".tmpl")
-	if err != nil {
-		return nil, err
-	}
-
-	var f Foo
-	f.UrlRelative = path
-	out := new(bytes.Buffer)
-	err = t.Execute(out, f)
-	if err != nil {
-		return nil, err
-	}
-
-	return out.Bytes(), nil
-}
-
-type Foo2 struct {
-	UrlRelative string
-	ImagePath   string
-	Title       string
-	Snippet     string
-}
-
 func postIndexEntry(e post.Entry) ([]byte, error) {
 	img := e.Image
 	if img == "" {
 		img = cfg.Image
-	}
-
-	t, err := template.ParseFiles("templates/macros/postlink.tmpl")
-	if err != nil {
-		return nil, err
 	}
 
 	var f Foo2
@@ -76,13 +54,8 @@ func postIndexEntry(e post.Entry) ([]byte, error) {
 	f.ImagePath = img
 	f.Title = e.Title
 	f.Snippet = e.Snippet
-	out := new(bytes.Buffer)
-	err = t.Execute(out, f)
-	if err != nil {
-		return nil, err
-	}
 
-	return out.Bytes(), nil
+	return expandTemplate("postlink", &f)
 }
 
 func postIndexEntryKey(key string, configs []post.Entry) ([]byte, error) {
@@ -168,7 +141,7 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 
 		var fo Foo
 		fo.UrlRelative = ent.SitePath
-		rv, err := expandMacro(key, &fo)
+		rv, err := expandTemplate(key, &fo)
 		if err != nil {
 			errStrings = append(errStrings, err.Error())
 			return []byte("")
@@ -254,7 +227,9 @@ func walk() error {
 		re2 := regexp.MustCompile(`<!--MACRO:.*-->`)
 		ent.Content = re2.ReplaceAllFunc(ent.Content, func(a []byte) []byte {
 			key := string(a[10 : len(a)-3])
-			rv, err := expandMacro(key, ent.SitePath)
+			var fo Foo
+			fo.UrlRelative = ent.SitePath
+			rv, err := expandTemplate(key, &fo)
 			if err != nil {
 				errStrings = append(errStrings, err.Error())
 				return []byte("")

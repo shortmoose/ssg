@@ -166,7 +166,9 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 	body = re2.ReplaceAllFunc(body, func(a []byte) []byte {
 		key := string(a[14 : len(a)-3])
 
-		rv, err := expandMacro(key, ent.SitePath)
+		var fo Foo
+		fo.UrlRelative = ent.SitePath
+		rv, err := expandMacro(key, &fo)
 		if err != nil {
 			errStrings = append(errStrings, err.Error())
 			return []byte("")

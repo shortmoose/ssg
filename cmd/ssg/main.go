@@ -20,26 +20,74 @@ var (
 	cfg config.Config
 )
 
-func postIndexEntry(e post.Entry) string {
-	var cnt string
+type Foo struct {
+	UrlRelative string
+}
+
+func expandMacro(key, path string) ([]byte, error) {
+	t, err := template.ParseFiles("templates/macros/" + key + ".tmpl")
+	if err != nil {
+		return nil, err
+	}
+
+	var f Foo
+	f.UrlRelative = path
+	out := new(bytes.Buffer)
+	err = t.Execute(out, f)
+	if err != nil {
+		return nil, err
+	}
+
+	return out.Bytes(), nil
+}
+
+type Foo2 struct {
+	UrlRelative string
+	ImagePath   string
+}
+
+func postIndexEntry(e post.Entry) ([]byte, error) {
+	/*
+		var cnt string
+		img := e.Image
+		if img == "" {
+			img = cfg.Image
+		}
+		cnt += "\n\n"
+		cnt += "<div style=\"width: 100%; overflow: hidden;\">"
+		cnt += "<div style=\"width: 170px; float: left;\">"
+		cnt += "<a href=\"" + e.SitePath + "\">"
+		cnt += "<img class=\"himg\" alt=\"thumbnail\" src=\"" + img + "\"></a></div>"
+		cnt += "<div style=\"margin-left: 190px;\">"
+
+		cnt += "<a href=\"" + e.SitePath + "\"><b>" + e.Title + "</b></a>"
+		if e.Snippet != "" {
+			cnt += "<p>" + e.Snippet + "</p>"
+		}
+		cnt += "</div></div><br />\n"
+
+		return cnt
+	*/
 	img := e.Image
 	if img == "" {
 		img = cfg.Image
 	}
-	cnt += "\n\n"
-	cnt += "<div style=\"width: 100%; overflow: hidden;\">"
-	cnt += "<div style=\"width: 170px; float: left;\">"
-	cnt += "<a href=\"" + e.SitePath + "\">"
-	cnt += "<img class=\"himg\" alt=\"thumbnail\" src=\"" + img + "\"></a></div>"
-	cnt += "<div style=\"margin-left: 190px;\">"
 
-	cnt += "<a href=\"" + e.SitePath + "\"><b>" + e.Title + "</b></a>"
-	if e.Snippet != "" {
-		cnt += "<p>" + e.Snippet + "</p>"
+	t, err := template.ParseFiles("templates/macros/postlink.tmpl")
+	if err != nil {
+		return nil, err
 	}
-	cnt += "</div></div><br />\n"
 
-	return cnt
+	var f Foo2
+	f.UrlRelative = e.SitePath
+	f.ImagePath = img
+	out := new(bytes.Buffer)
+	err = t.Execute(out, f)
+	if err != nil {
+		return nil, err
+	}
+
+	return out.Bytes(), nil
 }
 
 func postIndexEntryKey(key string, configs []post.Entry) (string, error) {
@@ -185,27 +233,6 @@ func validateImagesExist(configs []post.Entry) error {
 	}
 
 	return nil
-}
-
-type Foo struct {
-	UrlRelative string
-}
-
-func expandMacro(key, path string) ([]byte, error) {
-	t, err := template.ParseFiles("templates/macros/" + key + ".tmpl")
-	if err != nil {
-		return nil, err
-	}
-
-	var f Foo
-	f.UrlRelative = path
-	out := new(bytes.Buffer)
-	err = t.Execute(out, f)
-	if err != nil {
-		return nil, err
-	}
-
-	return out.Bytes(), nil
 }
 
 func walk() error {

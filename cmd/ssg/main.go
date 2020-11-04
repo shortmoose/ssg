@@ -3,13 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
 	"sort"
+	"text/template"
 
 	"github.com/shortmoose/ssg/internal/config"
 	"github.com/shortmoose/ssg/internal/post"
@@ -20,36 +20,67 @@ var (
 	cfg config.Config
 )
 
-func postIndexEntry(e post.Entry) string {
-	var cnt string
+type Foo struct {
+	UrlRelative string
+}
+
+func expandMacro(key, path string) ([]byte, error) {
+	t, err := template.ParseFiles("templates/macros/" + key + ".tmpl")
+	if err != nil {
+		return nil, err
+	}
+
+	var f Foo
+	f.UrlRelative = path
+	out := new(bytes.Buffer)
+	err = t.Execute(out, f)
+	if err != nil {
+		return nil, err
+	}
+
+	return out.Bytes(), nil
+}
+
+type Foo2 struct {
+	UrlRelative string
+	ImagePath   string
+	Title       string
+	Snippet     string
+}
+
+func postIndexEntry(e post.Entry) ([]byte, error) {
 	img := e.Image
 	if img == "" {
 		img = cfg.Image
 	}
-	cnt += "\n\n"
-	cnt += "<div style=\"width: 100%; overflow: hidden;\">"
-	cnt += "<div style=\"width: 170px; float: left;\">"
-	cnt += "<a href=\"" + e.SitePath + "\">"
-	cnt += "<img class=\"himg\" alt=\"thumbnail\" src=\"" + img + "\"></a></div>"
-	cnt += "<div style=\"margin-left: 190px;\">"
 
-	cnt += "<a href=\"" + e.SitePath + "\"><b>" + e.Title + "</b></a>"
-	if e.Snippet != "" {
-		cnt += "<p>" + e.Snippet + "</p>"
+	t, err := template.ParseFiles("templates/macros/postlink.tmpl")
+	if err != nil {
+		return nil, err
 	}
-	cnt += "</div></div><br />\n"
 
-	return cnt
+	var f Foo2
+	f.UrlRelative = e.SitePath
+	f.ImagePath = img
+	f.Title = e.Title
+	f.Snippet = e.Snippet
+	out := new(bytes.Buffer)
+	err = t.Execute(out, f)
+	if err != nil {
+		return nil, err
+	}
+
+	return out.Bytes(), nil
 }
 
-func postIndexEntryKey(key string, configs []post.Entry) (string, error) {
+func postIndexEntryKey(key string, configs []post.Entry) ([]byte, error) {
 	for i := range configs {
 		if configs[i].SitePath == key {
-			return postIndexEntry(configs[i]), nil
+			return postIndexEntry(configs[i])
 		}
 	}
 
-	return "", fmt.Errorf("invalid key: ''%s'", key)
+	return nil, fmt.Errorf("invalid key: ''%s'", key)
 }
 
 func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
@@ -64,9 +95,13 @@ func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
 	}
 	sort.Sort(post.ByDate(ents))
 
-	cnt := ""
+	var cnt []byte
 	for _, e := range ents {
-		cnt += postIndexEntry(e)
+		x, err := postIndexEntry(e)
+		if err != nil {
+			return err
+		}
+		cnt = append(cnt, x...)
 	}
 
 	ent.Content = []byte(cnt)
@@ -131,20 +166,22 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 		return fmt.Errorf("Invalid keys: %v", errStrings)
 	}
 
-	var extra string
+	var extra []byte
 	for _, k := range ent.RelatedPosts {
 		html, err := postIndexEntryKey(k, configs)
 		if err != nil {
 			return err
 		}
-		extra += html
+		extra = append(extra, html...)
 	}
-	if len(extra) != 0 {
-		extra = "\n<hr class=\"foo\">\n" +
+
+	ext := string(extra)
+	if len(ext) != 0 {
+		ext = "\n<hr class=\"foo\">\n" +
 			"<p><b>If you enjoyed that article, try out a couple more:</b></p>\n" +
-			extra + "\n\n"
+			ext + "\n\n"
 	}
-	body = append(body, []byte(extra)...)
+	body = append(body, []byte(ext)...)
 
 	post, err := ioutil.ReadFile("templates/post.html")
 	if err != nil {
@@ -185,27 +222,6 @@ func validateImagesExist(configs []post.Entry) error {
 	}
 
 	return nil
-}
-
-type Foo struct {
-	UrlRelative string
-}
-
-func expandMacro(key, path string) ([]byte, error) {
-	t, err := template.ParseFiles("templates/macros/" + key + ".tmpl")
-	if err != nil {
-		return nil, err
-	}
-
-	var f Foo
-	f.UrlRelative = path
-	out := new(bytes.Buffer)
-	err = t.Execute(out, f)
-	if err != nil {
-		return nil, err
-	}
-
-	return out.Bytes(), nil
 }
 
 func walk() error {

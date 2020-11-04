@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -118,13 +119,13 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 	body = re2.ReplaceAllFunc(body, func(a []byte) []byte {
 		key := string(a[14 : len(a)-3])
 
-		post, err := ioutil.ReadFile("templates/macros/" + key)
+		rv, err := expandMacro(key, ent.SitePath)
 		if err != nil {
-			errStrings = append(errStrings, key)
+			errStrings = append(errStrings, err.Error())
 			return []byte("")
 		}
 
-		return []byte(post)
+		return rv
 	})
 	if len(errStrings) != 0 {
 		return fmt.Errorf("Invalid keys: %v", errStrings)
@@ -186,6 +187,27 @@ func validateImagesExist(configs []post.Entry) error {
 	return nil
 }
 
+type Foo struct {
+	UrlRelative string
+}
+
+func expandMacro(key, path string) ([]byte, error) {
+	t, err := template.ParseFiles("templates/macros/" + key + ".tmpl")
+	if err != nil {
+		return nil, err
+	}
+
+	var f Foo
+	f.UrlRelative = path
+	out := new(bytes.Buffer)
+	err = t.Execute(out, f)
+	if err != nil {
+		return nil, err
+	}
+
+	return out.Bytes(), nil
+}
+
 func walk() error {
 	var siteinfo post.SiteInfo
 	siteinfo.DefaultTitle = cfg.Title
@@ -202,14 +224,13 @@ func walk() error {
 		re2 := regexp.MustCompile(`<!--MACRO:.*-->`)
 		ent.Content = re2.ReplaceAllFunc(ent.Content, func(a []byte) []byte {
 			key := string(a[10 : len(a)-3])
-
-			post, err := ioutil.ReadFile("templates/macros/" + key)
+			rv, err := expandMacro(key, ent.SitePath)
 			if err != nil {
-				errStrings = append(errStrings, key)
+				errStrings = append(errStrings, err.Error())
 				return []byte("")
 			}
 
-			return []byte(post)
+			return rv
 		})
 		if len(errStrings) != 0 {
 			return fmt.Errorf("Invalid keys: %v", errStrings)

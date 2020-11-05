@@ -180,6 +180,7 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 	if err != nil {
 		return fmt.Errorf("ReadFile :%w", err)
 	}
+
 	body = append(pre, append(body, post...)...)
 
 	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))

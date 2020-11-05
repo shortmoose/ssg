@@ -20,25 +20,16 @@ var (
 	cfg config.Config
 )
 
-type Foo struct {
-	UrlRelative string
+type PageData struct {
+	SiteTitle string
+	Title     string
+	Snippet   string
+	Image     string
+	Meta      string
 }
 
-func expandMacro(key, path string) ([]byte, error) {
-	t, err := template.ParseFiles("templates/macros/" + key + ".tmpl")
-	if err != nil {
-		return nil, err
-	}
-
-	var f Foo
-	f.UrlRelative = path
-	out := new(bytes.Buffer)
-	err = t.Execute(out, f)
-	if err != nil {
-		return nil, err
-	}
-
-	return out.Bytes(), nil
+type Foo struct {
+	UrlRelative string
 }
 
 type Foo2 struct {
@@ -48,15 +39,22 @@ type Foo2 struct {
 	Snippet     string
 }
 
+func expandTemplate(templateName string, data interface{}) ([]byte, error) {
+	t, err := template.ParseFiles(
+		"templates/" + templateName + ".tmpl")
+	if err != nil {
+		return nil, err
+	}
+
+	out := new(bytes.Buffer)
+	err = t.Execute(out, data)
+	return out.Bytes(), err
+}
+
 func postIndexEntry(e post.Entry) ([]byte, error) {
 	img := e.Image
 	if img == "" {
 		img = cfg.Image
-	}
-
-	t, err := template.ParseFiles("templates/macros/postlink.tmpl")
-	if err != nil {
-		return nil, err
 	}
 
 	var f Foo2
@@ -64,13 +62,8 @@ func postIndexEntry(e post.Entry) ([]byte, error) {
 	f.ImagePath = img
 	f.Title = e.Title
 	f.Snippet = e.Snippet
-	out := new(bytes.Buffer)
-	err = t.Execute(out, f)
-	if err != nil {
-		return nil, err
-	}
 
-	return out.Bytes(), nil
+	return expandTemplate("postlink", &f)
 }
 
 func postIndexEntryKey(key string, configs []post.Entry) ([]byte, error) {
@@ -114,23 +107,21 @@ func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
 }
 
 func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
-	pre, err := ioutil.ReadFile("templates/pre.html")
-	if err != nil {
-		return err
-	}
-
-	pre = bytes.Replace(pre, []byte("<!--TITLE-->"), []byte(ent.Title), -1)
-	pre = bytes.Replace(pre, []byte("<!--DESCRIPTION-->"), []byte(ent.Snippet), -1)
-	pre = bytes.Replace(pre, []byte("<!--IMAGE-->"), []byte(ent.Image), -1)
-
 	meta := ""
 	if ent.Image != cfg.Image {
 		meta = "<meta property=\"og:image\" content=\"" + ent.Image + "\" />\n  "
 	}
-	pre = bytes.Replace(pre, []byte("<!--META-->\n"), []byte(meta), -1)
 
-	if ent.Title != cfg.Title {
-		pre = append(pre, []byte("<h1>"+ent.Title+"</h1>\n")...)
+	var data PageData
+	data.SiteTitle = cfg.Title
+	data.Title = ent.Title
+	data.Snippet = ent.Snippet
+	data.Image = ent.Image
+	data.Meta = meta
+
+	pre, err := expandTemplate("pre", data)
+	if err != nil {
+		return err
 	}
 
 	body := ent.Content
@@ -154,7 +145,9 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 	body = re2.ReplaceAllFunc(body, func(a []byte) []byte {
 		key := string(a[14 : len(a)-3])
 
-		rv, err := expandMacro(key, ent.SitePath)
+		var fo Foo
+		fo.UrlRelative = ent.SitePath
+		rv, err := expandTemplate(key, &fo)
 		if err != nil {
 			errStrings = append(errStrings, err.Error())
 			return []byte("")
@@ -187,6 +180,7 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 	if err != nil {
 		return fmt.Errorf("ReadFile :%w", err)
 	}
+
 	body = append(pre, append(body, post...)...)
 
 	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
@@ -240,7 +234,9 @@ func walk() error {
 		re2 := regexp.MustCompile(`<!--MACRO:.*-->`)
 		ent.Content = re2.ReplaceAllFunc(ent.Content, func(a []byte) []byte {
 			key := string(a[10 : len(a)-3])
-			rv, err := expandMacro(key, ent.SitePath)
+			var fo Foo
+			fo.UrlRelative = ent.SitePath
+			rv, err := expandTemplate(key, &fo)
 			if err != nil {
 				errStrings = append(errStrings, err.Error())
 				return []byte("")

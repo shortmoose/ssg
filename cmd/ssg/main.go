@@ -26,6 +26,7 @@ type PageData struct {
 	Snippet   string
 	Image     string
 	Meta      string
+	Body      string
 }
 
 type Foo struct {
@@ -106,24 +107,7 @@ func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
 	return nil
 }
 
-func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
-	meta := ""
-	if ent.Image != cfg.Image {
-		meta = "<meta property=\"og:image\" content=\"" + ent.Image + "\" />\n  "
-	}
-
-	var data PageData
-	data.SiteTitle = cfg.Title
-	data.Title = ent.Title
-	data.Snippet = ent.Snippet
-	data.Image = ent.Image
-	data.Meta = meta
-
-	pre, err := expandTemplate("pre", data)
-	if err != nil {
-		return err
-	}
-
+func expandBody(ent post.Entry, configs []post.Entry) ([]byte, error) {
 	body := ent.Content
 
 	var errStrings []string
@@ -138,7 +122,7 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 		return []byte(html)
 	})
 	if len(errStrings) != 0 {
-		return fmt.Errorf("Invalid keys: %v", errStrings)
+		return nil, fmt.Errorf("Invalid keys: %v", errStrings)
 	}
 
 	re2 := regexp.MustCompile(`<!--MACRO_WEB:.*-->`)
@@ -156,14 +140,14 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 		return rv
 	})
 	if len(errStrings) != 0 {
-		return fmt.Errorf("Invalid keys: %v", errStrings)
+		return nil, fmt.Errorf("Invalid keys: %v", errStrings)
 	}
 
 	var extra []byte
 	for _, k := range ent.RelatedPosts {
 		html, err := postIndexEntryKey(k, configs)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		extra = append(extra, html...)
 	}
@@ -176,12 +160,31 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 	}
 	body = append(body, []byte(ext)...)
 
-	post, err := ioutil.ReadFile("templates/post.html")
-	if err != nil {
-		return fmt.Errorf("ReadFile :%w", err)
+	return body, nil
+}
+
+func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
+	meta := ""
+	if ent.Image != cfg.Image {
+		meta = "<meta property=\"og:image\" content=\"" + ent.Image + "\" />\n  "
 	}
 
-	body = append(pre, append(body, post...)...)
+	var data PageData
+	data.SiteTitle = cfg.Title
+	data.Title = ent.Title
+	data.Snippet = ent.Snippet
+	data.Image = ent.Image
+	data.Meta = meta
+	b, err := expandBody(ent, configs)
+	data.Body = string(b)
+	if err != nil {
+		return err
+	}
+
+	body, err := expandTemplate("pre", data)
+	if err != nil {
+		return err
+	}
 
 	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
 	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))

@@ -10,11 +10,15 @@
 <div style="width: 100%; overflow: hidden;"><div style="width: 170px; float: left;"><a href="/p2"><img class="himg" alt="thumbnail" src="https://avatars2.githubusercontent.com/u/68955854"></a></div><div style="margin-left: 190px;"><a href="/p2"><b>Post 2</b></a><p>Post 2 snippet&hellip;</p></div></div><br />
 
 
-<a href="/p1">This should link to this page.</a>
+{{template "foo.tmpl" .}}
 
 <a href="/p1">This should link to this page.</a>
 
+<a href="/p1">This should link to this page.</a>
 
+
+
+{{if .Web}} {{template "foo.tmpl" .}} {{end}}
 
 <a href="/p1">This should link to this page.</a>
 

@@ -42,13 +42,13 @@ type Foo2 struct {
 
 func expandTemplate(templateName string, data interface{}) ([]byte, error) {
 	t, err := template.ParseGlob(
-		"templates/*.tmpl")
+		"templates/*")
 	if err != nil {
 		return nil, err
 	}
 
 	out := new(bytes.Buffer)
-	err = t.ExecuteTemplate(out, templateName+".tmpl", data)
+	err = t.ExecuteTemplate(out, templateName, data)
 	if err != nil {
 		log.Fatalf("Oops %s %v", templateName, err.Error())
 	}

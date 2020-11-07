@@ -29,6 +29,7 @@ type PageData struct {
 func executeTemplateGiven(templateText string, data interface{}) ([]byte, error) {
 	t, err := template.ParseGlob("templates/*")
 	if err != nil {
+		// TODO: There must be a better way to do this.
 		if !strings.Contains(err.Error(), "matches no files") {
 			return nil, err
 		}

@@ -21,16 +21,10 @@ var (
 )
 
 type PageData struct {
-	SiteTitle string
-	Title     string
-	Snippet   string
-	Image     string
-	Meta      string
-	Body      string
-}
-
-type Foo struct {
-	UrlRelative string
+	SiteConfig config.Config
+	Entry      post.Entry
+	Web        bool
+	Body       string
 }
 
 type Foo2 struct {
@@ -40,9 +34,8 @@ type Foo2 struct {
 	Snippet     string
 }
 
-func expandTemplate(templateName string, data interface{}) ([]byte, error) {
-	t, err := template.ParseGlob(
-		"templates/*")
+func executeTemplateByName(templateName string, data interface{}) ([]byte, error) {
+	t, err := template.ParseGlob("templates/*")
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +44,22 @@ func expandTemplate(templateName string, data interface{}) ([]byte, error) {
 	err = t.ExecuteTemplate(out, templateName, data)
 	if err != nil {
 		log.Fatalf("Oops %s %v", templateName, err.Error())
+	}
+	return out.Bytes(), err
+}
+
+func executeTemplateGiven(templateText string, data interface{}) ([]byte, error) {
+	t, err := template.ParseGlob("templates/*")
+	if err != nil {
+		return nil, err
+	}
+
+	tmpl, err := t.New("x").Parse(templateText)
+
+	out := new(bytes.Buffer)
+	err = tmpl.ExecuteTemplate(out, "x", data)
+	if err != nil {
+		log.Fatalf("Oops %s %v", "x", err.Error())
 	}
 	return out.Bytes(), err
 }
@@ -67,7 +76,7 @@ func postIndexEntry(e post.Entry) ([]byte, error) {
 	f.Title = e.Title
 	f.Snippet = e.Snippet
 
-	return expandTemplate("postlink", &f)
+	return executeTemplateByName("postlink", &f)
 }
 
 func postIndexEntryKey(key string, configs []post.Entry) ([]byte, error) {
@@ -110,8 +119,11 @@ func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
 	return nil
 }
 
-func expandBody(ent post.Entry, configs []post.Entry) ([]byte, error) {
-	body := ent.Content
+func expandBody(ent post.Entry, configs []post.Entry, data PageData) ([]byte, error) {
+	body, err := executeTemplateGiven(string(ent.Content), data)
+	if err != nil {
+		return nil, err
+	}
 
 	var errStrings []string
 	re := regexp.MustCompile(`<!--/.*-->`)
@@ -123,24 +135,6 @@ func expandBody(ent post.Entry, configs []post.Entry) ([]byte, error) {
 			return []byte("")
 		}
 		return []byte(html)
-	})
-	if len(errStrings) != 0 {
-		return nil, fmt.Errorf("Invalid keys: %v", errStrings)
-	}
-
-	re2 := regexp.MustCompile(`<!--MACRO_WEB:.*-->`)
-	body = re2.ReplaceAllFunc(body, func(a []byte) []byte {
-		key := string(a[14 : len(a)-3])
-
-		var fo Foo
-		fo.UrlRelative = ent.SitePath
-		rv, err := expandTemplate(key, &fo)
-		if err != nil {
-			errStrings = append(errStrings, err.Error())
-			return []byte("")
-		}
-
-		return rv
 	})
 	if len(errStrings) != 0 {
 		return nil, fmt.Errorf("Invalid keys: %v", errStrings)
@@ -167,24 +161,25 @@ func expandBody(ent post.Entry, configs []post.Entry) ([]byte, error) {
 }
 
 func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
-	meta := ""
-	if ent.Image != cfg.Image {
-		meta = "<meta property=\"og:image\" content=\"" + ent.Image + "\" />\n  "
-	}
+	/*
+		meta := ""
+		if ent.Image != cfg.Image {
+			meta = "<meta property=\"og:image\" content=\"" + ent.Image + "\" />\n  "
+		}
+	*/
 
 	var data PageData
-	data.SiteTitle = cfg.Title
-	data.Title = ent.Title
-	data.Snippet = ent.Snippet
-	data.Image = ent.Image
-	data.Meta = meta
-	b, err := expandBody(ent, configs)
+	data.SiteConfig = cfg
+	data.Entry = ent
+	data.Web = true
+
+	b, err := expandBody(ent, configs, data)
 	data.Body = string(b)
 	if err != nil {
 		return err
 	}
 
-	body, err := expandTemplate("pre", data)
+	body, err := executeTemplateByName("pre", data)
 	if err != nil {
 		return err
 	}
@@ -234,24 +229,6 @@ func walk() error {
 		ent, err := post.GetPageConfig(path, path[5:], siteinfo)
 		if err != nil {
 			return err
-		}
-
-		var errStrings []string
-		re2 := regexp.MustCompile(`<!--MACRO:.*-->`)
-		ent.Content = re2.ReplaceAllFunc(ent.Content, func(a []byte) []byte {
-			key := string(a[10 : len(a)-3])
-			var fo Foo
-			fo.UrlRelative = ent.SitePath
-			rv, err := expandTemplate(key, &fo)
-			if err != nil {
-				errStrings = append(errStrings, err.Error())
-				return []byte("")
-			}
-
-			return rv
-		})
-		if len(errStrings) != 0 {
-			return fmt.Errorf("Invalid keys: %v", errStrings)
 		}
 
 		configs = append(configs, ent)

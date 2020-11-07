@@ -1,3 +1,1 @@
-<a href="{{.UrlRelative}}">This should link to this page.</a>
-
-{{template "foo" .}}
+<a href="{{.Entry.SitePath}}">This should link to this page.</a>

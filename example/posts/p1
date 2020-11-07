@@ -8,10 +8,6 @@ CONFIG -->
 
 <!--/p2-->
 
-{{template "foo.tmpl" .}}
+{{template "ad" .}}
 
-<!--MACRO:ad-->
-
-{{if .Web}} {{template "foo.tmpl" .}} {{end}}
-
-<!--MACRO_WEB:ad-->
+{{if .Web}}{{template "ad" .}}{{end}}

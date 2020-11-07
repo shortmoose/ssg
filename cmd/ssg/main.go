@@ -21,8 +21,9 @@ var (
 )
 
 type PageData struct {
+	post.Entry
+
 	SiteConfig config.Config
-	Entry      post.Entry
 	Web        bool
 	Body       string
 }

@@ -20,8 +20,9 @@ type Feed struct {
 }
 
 type PageData struct {
+	post.Entry
+
 	SiteConfig config.Config
-	Entry      post.Entry
 	Body       string
 	Web        bool
 }

@@ -3,9 +3,9 @@ package util
 import (
 	"bytes"
 	"fmt"
-	"html/template"
-	"log"
 	"sort"
+	"strings"
+	"text/template"
 
 	"github.com/shortmoose/ssg/internal/config"
 	"github.com/shortmoose/ssg/internal/post"
@@ -22,22 +22,17 @@ type Feed struct {
 type PageData struct {
 	SiteConfig config.Config
 	Entry      post.Entry
-
-	SiteTitle string
-	Title     string
-	Snippet   string
-	Image     string
-	Meta      string
-	Body      string
-	SitePath  string
-	Web       bool
+	Body       string
+	Web        bool
 }
 
 func executeTemplateGiven(templateText string, data interface{}) ([]byte, error) {
-	t, err := template.ParseGlob(
-		"templates/*")
+	t, err := template.ParseGlob("templates/*")
 	if err != nil {
-		return nil, err
+		if !strings.Contains(err.Error(), "matches no files") {
+			return nil, err
+		}
+		t = template.New("zoo")
 	}
 
 	tmpl, err := t.New("x").Parse(templateText)
@@ -45,8 +40,9 @@ func executeTemplateGiven(templateText string, data interface{}) ([]byte, error)
 	out := new(bytes.Buffer)
 	err = tmpl.ExecuteTemplate(out, "x", data)
 	if err != nil {
-		log.Fatalf("Oops %s %v", "x", err.Error())
+		return nil, err
 	}
+
 	return out.Bytes(), err
 }
 
@@ -83,15 +79,9 @@ func CreateAtomFeed(feed Feed, configs []post.Entry) ([]byte, error) {
 			var data PageData
 			data.Entry = e
 
-			data.SiteTitle = "Foo cfg.Title"
-			data.Title = e.Title
-			data.Snippet = e.Snippet
-			data.Image = e.Image
-			data.SitePath = e.SitePath
-
 			c, err := executeTemplateGiven(string(e.Content), data)
 			if err != nil {
-				log.Fatalf("OOps")
+				return nil, err
 			}
 
 			s += fmt.Sprintf("%s\n", c)

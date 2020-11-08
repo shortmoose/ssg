@@ -9,16 +9,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// SiteInfo contains the default info for the site we are parsing.
-type SiteInfo struct {
-	DefaultTitle string
-	DefaultImage string
-}
-
 // Post is the structure used for a given web post entry.
 type Post struct {
-	FilePath     string
-	SitePath     string
 	Type         string   `yaml:"type"`
 	Title        string   `yaml:"title"`
 	Snippet      string   `yaml:"snippet"`
@@ -26,8 +18,10 @@ type Post struct {
 	Date         string   `yaml:"date"`
 	RelatedPosts []string `yaml:"related"`
 	Author       string   `yaml:"author"`
-	Content      []byte
-	HTML         []byte
+
+	FilePath string
+	SitePath string
+	Content  []byte
 }
 
 func stripPageConfig(body []byte) []byte {
@@ -60,33 +54,19 @@ func getPageConfig(src string) (Post, error) {
 		body = stripPageConfig(body)
 	}
 
-	if cfg.Snippet == "" {
-		cfg.Snippet = "Description unavailable."
-	} else {
-		cfg.Snippet = cfg.Snippet + "&hellip;"
-	}
-
 	cfg.Content = body
 	return cfg, nil
 }
 
 // GetPageConfig will parse the web post entry at filepath.
-func GetPageConfig(filepath, sitepath string, siteinfo SiteInfo) (Post, error) {
+func GetPageConfig(filepath, sitepath string) (Post, error) {
 	cfg, err := getPageConfig(filepath)
 	if err != nil {
 		return cfg, err
 	}
+
 	cfg.FilePath = filepath
 	cfg.SitePath = sitepath
-
-	// Set defaults.
-	if cfg.Title == "" {
-		cfg.Title = siteinfo.DefaultTitle
-	}
-
-	if cfg.Image == "" {
-		cfg.Image = siteinfo.DefaultImage
-	}
 
 	if cfg.Date != "" {
 		t, err := time.Parse(time.RFC3339, cfg.Date)

@@ -32,16 +32,6 @@ func postIndexEntry(e post.Entry) ([]byte, error) {
 	return util.ExecuteTemplateByName("postlink", &data)
 }
 
-func postIndexEntryKey(key string, configs []post.Entry) ([]byte, error) {
-	for i := range configs {
-		if configs[i].SitePath == key {
-			return postIndexEntry(configs[i])
-		}
-	}
-
-	return nil, fmt.Errorf("invalid key: ''%s'", key)
-}
-
 func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
 	ents := []post.Entry{}
 	for i := range configs {
@@ -77,38 +67,6 @@ func expandBody(ent post.Entry, configs []post.Entry, data util.PageData) ([]byt
 	if err != nil {
 		return nil, err
 	}
-
-	var errStrings []string
-	re := regexp.MustCompile(`<!--/.*-->`)
-	body = re.ReplaceAllFunc(body, func(a []byte) []byte {
-		key := string(a[4 : len(a)-3])
-		html, err := postIndexEntryKey(key, configs)
-		if err != nil {
-			errStrings = append(errStrings, key)
-			return []byte("")
-		}
-		return []byte(html)
-	})
-	if len(errStrings) != 0 {
-		return nil, fmt.Errorf("Invalid keys: %v", errStrings)
-	}
-
-	var extra []byte
-	for _, k := range ent.RelatedPosts {
-		html, err := postIndexEntryKey(k, configs)
-		if err != nil {
-			return nil, err
-		}
-		extra = append(extra, html...)
-	}
-
-	ext := string(extra)
-	if len(ext) != 0 {
-		ext = "\n<hr class=\"foo\">\n" +
-			"<p><b>If you enjoyed that article, try out a couple more:</b></p>\n" +
-			ext + "\n\n"
-	}
-	body = append(body, []byte(ext)...)
 
 	return body, nil
 }

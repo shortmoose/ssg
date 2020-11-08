@@ -8,6 +8,8 @@ CONFIG -->
 
 {{if .Web}}{{template "postlink" (index .Pages "/p2")}}{{end}}
 
+{{if ne "" ((index .Pages "/p2").SitePath)}}{{template "postlink" (index .Pages "/p2")}}{{end}}
+
 {{template "ad" .}}
 
 {{if .Web}}{{template "ad" .}}{{end}}

@@ -113,13 +113,9 @@ func validateImagesExist(configs []config.Post) error {
 }
 
 func walk() error {
-	var siteinfo config.SiteInfo
-	siteinfo.DefaultTitle = cfg.Title
-	siteinfo.DefaultImage = cfg.Image
-
 	var configs []config.Post
 	err := util.Walk("posts", func(path string, info os.FileInfo) error {
-		ent, err := config.GetPageConfig(path, path[5:], siteinfo)
+		ent, err := config.GetPageConfig(path, path[5:])
 		if err != nil {
 			return err
 		}

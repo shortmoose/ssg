@@ -9,7 +9,6 @@ import (
 	"os"
 	"regexp"
 	"sort"
-	"text/template"
 
 	"github.com/shortmoose/ssg/internal/config"
 	"github.com/shortmoose/ssg/internal/post"
@@ -20,55 +19,17 @@ var (
 	cfg config.Config
 )
 
-type PageData struct {
-	post.Entry
-
-	SiteConfig config.Config
-	Web        bool
-	Body       string
-}
-
-func executeTemplateByName(templateName string, data interface{}) ([]byte, error) {
-	t, err := template.ParseGlob("templates/*")
-	if err != nil {
-		return nil, err
-	}
-
-	out := new(bytes.Buffer)
-	err = t.ExecuteTemplate(out, templateName, data)
-	if err != nil {
-		log.Fatalf("Oops %s %v", templateName, err.Error())
-	}
-	return out.Bytes(), err
-}
-
-func executeTemplateGiven(templateText string, data interface{}) ([]byte, error) {
-	t, err := template.ParseGlob("templates/*")
-	if err != nil {
-		return nil, err
-	}
-
-	tmpl, err := t.New("x").Parse(templateText)
-
-	out := new(bytes.Buffer)
-	err = tmpl.ExecuteTemplate(out, "x", data)
-	if err != nil {
-		log.Fatalf("Oops %s %v", "x", err.Error())
-	}
-	return out.Bytes(), err
-}
-
 func postIndexEntry(e post.Entry) ([]byte, error) {
 	img := e.Image
 	if img == "" {
 		img = cfg.Image
 	}
 
-	var data PageData
+	var data util.PageData
 	data.SiteConfig = cfg
 	data.Entry = e
 
-	return executeTemplateByName("postlink", &data)
+	return util.ExecuteTemplateByName("postlink", &data)
 }
 
 func postIndexEntryKey(key string, configs []post.Entry) ([]byte, error) {
@@ -111,8 +72,8 @@ func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
 	return nil
 }
 
-func expandBody(ent post.Entry, configs []post.Entry, data PageData) ([]byte, error) {
-	body, err := executeTemplateGiven(string(ent.Content), data)
+func expandBody(ent post.Entry, configs []post.Entry, data util.PageData) ([]byte, error) {
+	body, err := util.ExecuteTemplateGiven(string(ent.Content), data)
 	if err != nil {
 		return nil, err
 	}
@@ -153,10 +114,14 @@ func expandBody(ent post.Entry, configs []post.Entry, data PageData) ([]byte, er
 }
 
 func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
-	var data PageData
+	var data util.PageData
 	data.SiteConfig = cfg
 	data.Entry = ent
 	data.Web = true
+	data.Pages = make(map[string]post.Entry)
+	for _, c := range configs {
+		data.Pages[c.SitePath] = c
+	}
 
 	b, err := expandBody(ent, configs, data)
 	data.Body = string(b)
@@ -164,7 +129,7 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 		return err
 	}
 
-	body, err := executeTemplateByName("pre", data)
+	body, err := util.ExecuteTemplateByName("pre", data)
 	if err != nil {
 		return err
 	}

@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 	"text/template"
@@ -23,11 +24,26 @@ type PageData struct {
 	post.Entry
 
 	SiteConfig config.Config
+	Pages      map[string]post.Entry
 	Body       string
 	Web        bool
 }
 
-func executeTemplateGiven(templateText string, data interface{}) ([]byte, error) {
+func ExecuteTemplateByName(templateName string, data interface{}) ([]byte, error) {
+	t, err := template.ParseGlob("templates/*")
+	if err != nil {
+		return nil, err
+	}
+
+	out := new(bytes.Buffer)
+	err = t.ExecuteTemplate(out, templateName, data)
+	if err != nil {
+		log.Fatalf("Oops %s %v", templateName, err.Error())
+	}
+	return out.Bytes(), err
+}
+
+func ExecuteTemplateGiven(templateText string, data interface{}) ([]byte, error) {
 	t, err := template.ParseGlob("templates/*")
 	if err != nil {
 		// TODO: There must be a better way to do this.
@@ -80,8 +96,9 @@ func CreateAtomFeed(feed Feed, configs []post.Entry) ([]byte, error) {
 
 			var data PageData
 			data.Entry = e
+			data.Pages = make(map[string]post.Entry)
 
-			c, err := executeTemplateGiven(string(e.Content), data)
+			c, err := ExecuteTemplateGiven(string(e.Content), data)
 			if err != nil {
 				return nil, err
 			}

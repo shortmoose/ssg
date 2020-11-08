@@ -16,7 +16,7 @@ func TestCreateAtomFeedEmpty(t *testing.T) {
 	feed.SiteID = "http://testid.test"
 	feed.Author = "me"
 
-	var posts []config.Entry
+	var posts []config.Post
 	_, err := util.CreateAtomFeed(feed, posts)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Can't create XML feed, no entries") {
@@ -35,13 +35,13 @@ func TestCreateAtomFeed(t *testing.T) {
 	feed.SiteID = "http://testid.test"
 	feed.Author = "me"
 
-	var entry config.Entry
+	var entry config.Post
 	entry.Date = "2020-07-29T13:40:21Z"
 	entry.Title = "Post Title"
 	entry.SitePath = "/postpath"
 	entry.Content = []byte("Post Content")
 
-	posts := []config.Entry{entry}
+	posts := []config.Post{entry}
 
 	atom, err := util.CreateAtomFeed(feed, posts[0:1])
 	if err != nil {

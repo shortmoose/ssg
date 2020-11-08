@@ -20,10 +20,10 @@ type Feed struct {
 }
 
 type PageData struct {
-	config.Entry
+	config.Post
 
 	SiteConfig config.Site
-	Pages      map[string]config.Entry
+	Pages      map[string]config.Post
 	Body       string
 	Web        bool
 }
@@ -63,8 +63,8 @@ func ExecuteTemplateGiven(templateText string, data interface{}) ([]byte, error)
 	return out.Bytes(), err
 }
 
-func CreateAtomFeed(feed Feed, configs []config.Entry) ([]byte, error) {
-	ents := []config.Entry{}
+func CreateAtomFeed(feed Feed, configs []config.Post) ([]byte, error) {
+	ents := []config.Post{}
 	for i := range configs {
 		if configs[i].Date != "" {
 			ents = append(ents, configs[i])
@@ -94,8 +94,8 @@ func CreateAtomFeed(feed Feed, configs []config.Entry) ([]byte, error) {
 			s += fmt.Sprintf("  <content type=\"html\"><![CDATA[\n")
 
 			var data PageData
-			data.Entry = e
-			data.Pages = make(map[string]config.Entry)
+			data.Post = e
+			data.Pages = make(map[string]config.Post)
 
 			c, err := ExecuteTemplateGiven(string(e.Content), data)
 			if err != nil {

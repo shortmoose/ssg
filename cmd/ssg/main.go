@@ -18,16 +18,16 @@ var (
 	cfg config.Site
 )
 
-func postIndexEntry(e config.Entry) ([]byte, error) {
+func postIndexEntry(e config.Post) ([]byte, error) {
 	var data util.PageData
 	data.SiteConfig = cfg
-	data.Entry = e
+	data.Post = e
 
 	return util.ExecuteTemplateByName("postlink", &data)
 }
 
-func buildIndex(path string, ent config.Entry, configs []config.Entry) error {
-	ents := []config.Entry{}
+func buildIndex(path string, ent config.Post, configs []config.Post) error {
+	ents := []config.Post{}
 	for i := range configs {
 		if configs[i].Date != "" {
 			ents = append(ents, configs[i])
@@ -56,12 +56,12 @@ func buildIndex(path string, ent config.Entry, configs []config.Entry) error {
 	return nil
 }
 
-func buildPage(dest string, ent config.Entry, configs []config.Entry) error {
+func buildPage(dest string, ent config.Post, configs []config.Post) error {
 	var data util.PageData
 	data.SiteConfig = cfg
-	data.Entry = ent
+	data.Post = ent
 	data.Web = true
-	data.Pages = make(map[string]config.Entry)
+	data.Pages = make(map[string]config.Post)
 	for _, c := range configs {
 		data.Pages[c.SitePath] = c
 	}
@@ -88,7 +88,7 @@ func buildPage(dest string, ent config.Entry, configs []config.Entry) error {
 	return nil
 }
 
-func validateImagesExist(configs []config.Entry) error {
+func validateImagesExist(configs []config.Post) error {
 	m := map[string]bool{}
 	for _, ent := range configs {
 		re := regexp.MustCompile(`/(img|pdf)/[^"']*`)
@@ -117,7 +117,7 @@ func walk() error {
 	siteinfo.DefaultTitle = cfg.Title
 	siteinfo.DefaultImage = cfg.Image
 
-	var configs []config.Entry
+	var configs []config.Post
 	err := util.Walk("posts", func(path string, info os.FileInfo) error {
 		ent, err := config.GetPageConfig(path, path[5:], siteinfo)
 		if err != nil {

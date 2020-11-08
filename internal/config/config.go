@@ -17,6 +17,20 @@ type Site struct {
 	ImageURL string `yaml:"image-url"`
 }
 
+type Post struct {
+	Type         string   `yaml:"type"`
+	Title        string   `yaml:"title"`
+	Snippet      string   `yaml:"snippet"`
+	Image        string   `yaml:"image"`
+	Date         string   `yaml:"date"`
+	RelatedPosts []string `yaml:"related"`
+	Author       string   `yaml:"author"`
+
+	FilePath string
+	SitePath string
+	Content  []byte
+}
+
 func GetSiteConfig(src io.Reader) (Site, error) {
 	var cfg Site
 

@@ -8,6 +8,6 @@ CONFIG -->
 
 <!--/p2-->
 
-<!--MACRO:ad-->
+{{template "ad" .}}
 
-<!--MACRO_WEB:ad-->
+{{if .Web}}{{template "ad" .}}{{end}}

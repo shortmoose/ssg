@@ -1,0 +1,1 @@
+<a href="{{.SitePath}}">This should link to this page.</a>

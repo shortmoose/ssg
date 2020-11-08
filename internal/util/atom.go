@@ -1,9 +1,13 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
 	"sort"
+	"strings"
+	"text/template"
 
+	"github.com/shortmoose/ssg/internal/config"
 	"github.com/shortmoose/ssg/internal/post"
 )
 
@@ -13,6 +17,35 @@ type Feed struct {
 	SiteTitle string
 	SiteID    string
 	Author    string
+}
+
+type PageData struct {
+	post.Entry
+
+	SiteConfig config.Config
+	Body       string
+	Web        bool
+}
+
+func executeTemplateGiven(templateText string, data interface{}) ([]byte, error) {
+	t, err := template.ParseGlob("templates/*")
+	if err != nil {
+		// TODO: There must be a better way to do this.
+		if !strings.Contains(err.Error(), "matches no files") {
+			return nil, err
+		}
+		t = template.New("zoo")
+	}
+
+	tmpl, err := t.New("x").Parse(templateText)
+
+	out := new(bytes.Buffer)
+	err = tmpl.ExecuteTemplate(out, "x", data)
+	if err != nil {
+		return nil, err
+	}
+
+	return out.Bytes(), err
 }
 
 func CreateAtomFeed(feed Feed, configs []post.Entry) ([]byte, error) {
@@ -44,7 +77,16 @@ func CreateAtomFeed(feed Feed, configs []post.Entry) ([]byte, error) {
 			s += fmt.Sprintf("  <id>%s%s</id>\n", feed.SiteURL, e.SitePath)
 			s += fmt.Sprintf("  <author><name>%s</name></author>\n", feed.Author)
 			s += fmt.Sprintf("  <content type=\"html\"><![CDATA[\n")
-			s += fmt.Sprintf("%s\n", e.Content)
+
+			var data PageData
+			data.Entry = e
+
+			c, err := executeTemplateGiven(string(e.Content), data)
+			if err != nil {
+				return nil, err
+			}
+
+			s += fmt.Sprintf("%s\n", c)
 			s += fmt.Sprintf("  ]]></content>\n")
 			s += fmt.Sprintf("</entry>\n")
 		}

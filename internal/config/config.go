@@ -9,7 +9,7 @@ import (
 )
 
 // Entry is the structure used for a given web post entry.
-type Config struct {
+type Site struct {
 	Title    string `yaml:"title"`
 	Image    string `yaml:"image"`
 	URL      string `yaml:"url"`
@@ -17,8 +17,8 @@ type Config struct {
 	ImageURL string `yaml:"image-url"`
 }
 
-func GetConfig(src io.Reader) (Config, error) {
-	var cfg Config
+func GetSiteConfig(src io.Reader) (Site, error) {
+	var cfg Site
 
 	body, err := ioutil.ReadAll(src)
 	if err != nil {

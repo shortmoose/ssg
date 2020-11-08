@@ -23,7 +23,7 @@ type Feed struct {
 type PageData struct {
 	post.Entry
 
-	SiteConfig config.Config
+	SiteConfig config.Site
 	Pages      map[string]post.Entry
 	Body       string
 	Web        bool

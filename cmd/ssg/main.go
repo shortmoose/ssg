@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	cfg config.Config
+	cfg config.Site
 )
 
 func postIndexEntry(e post.Entry) ([]byte, error) {
@@ -195,7 +195,7 @@ func main() {
 	}
 	defer handle.Close()
 
-	cfgTmp, err := config.GetConfig(handle)
+	cfgTmp, err := config.GetSiteConfig(handle)
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}

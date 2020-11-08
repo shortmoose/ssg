@@ -9,7 +9,6 @@ import (
 	"text/template"
 
 	"github.com/shortmoose/ssg/internal/config"
-	"github.com/shortmoose/ssg/internal/post"
 )
 
 // feed TODO
@@ -21,10 +20,10 @@ type Feed struct {
 }
 
 type PageData struct {
-	post.Entry
+	config.Entry
 
 	SiteConfig config.Site
-	Pages      map[string]post.Entry
+	Pages      map[string]config.Entry
 	Body       string
 	Web        bool
 }
@@ -64,8 +63,8 @@ func ExecuteTemplateGiven(templateText string, data interface{}) ([]byte, error)
 	return out.Bytes(), err
 }
 
-func CreateAtomFeed(feed Feed, configs []post.Entry) ([]byte, error) {
-	ents := []post.Entry{}
+func CreateAtomFeed(feed Feed, configs []config.Entry) ([]byte, error) {
+	ents := []config.Entry{}
 	for i := range configs {
 		if configs[i].Date != "" {
 			ents = append(ents, configs[i])
@@ -74,7 +73,7 @@ func CreateAtomFeed(feed Feed, configs []post.Entry) ([]byte, error) {
 	if len(ents) == 0 {
 		return nil, fmt.Errorf("Can't create XML feed, no entries")
 	}
-	sort.Sort(post.ByDate(ents))
+	sort.Sort(config.ByDate(ents))
 
 	s := ""
 	s += fmt.Sprintf("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
@@ -96,7 +95,7 @@ func CreateAtomFeed(feed Feed, configs []post.Entry) ([]byte, error) {
 
 			var data PageData
 			data.Entry = e
-			data.Pages = make(map[string]post.Entry)
+			data.Pages = make(map[string]config.Entry)
 
 			c, err := ExecuteTemplateGiven(string(e.Content), data)
 			if err != nil {

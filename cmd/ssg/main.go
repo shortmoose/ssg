@@ -19,11 +19,6 @@ var (
 )
 
 func postIndexEntry(e config.Entry) ([]byte, error) {
-	img := e.Image
-	if img == "" {
-		img = cfg.Image
-	}
-
 	var data util.PageData
 	data.SiteConfig = cfg
 	data.Entry = e
@@ -61,15 +56,6 @@ func buildIndex(path string, ent config.Entry, configs []config.Entry) error {
 	return nil
 }
 
-func expandBody(ent config.Entry, configs []config.Entry, data util.PageData) ([]byte, error) {
-	body, err := util.ExecuteTemplateGiven(string(ent.Content), data)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
-}
-
 func buildPage(dest string, ent config.Entry, configs []config.Entry) error {
 	var data util.PageData
 	data.SiteConfig = cfg
@@ -80,11 +66,11 @@ func buildPage(dest string, ent config.Entry, configs []config.Entry) error {
 		data.Pages[c.SitePath] = c
 	}
 
-	b, err := expandBody(ent, configs, data)
-	data.Body = string(b)
+	bx, err := util.ExecuteTemplateGiven(string(ent.Content), data)
 	if err != nil {
 		return err
 	}
+	data.Body = string(bx)
 
 	body, err := util.ExecuteTemplateByName("pre", data)
 	if err != nil {

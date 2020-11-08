@@ -1,1 +1,1 @@
-<div style="width: 100%; overflow: hidden;"><div style="width: 170px; float: left;"><a href="{{.UrlRelative}}"><img class="himg" alt="thumbnail" src="{{.ImagePath}}"></a></div><div style="margin-left: 190px;"><a href="{{.UrlRelative}}"><b>{{.Title}}</b></a><p>{{.Snippet}}</p></div></div><br />
+<div style="width: 100%; overflow: hidden;"><div style="width: 170px; float: left;"><a href="{{.SitePath}}"><img class="himg" alt="thumbnail" src="{{.Image}}"></a></div><div style="margin-left: 190px;"><a href="{{.SitePath}}"><b>{{.Title}}</b></a><p>{{.Snippet}}</p></div></div><br />

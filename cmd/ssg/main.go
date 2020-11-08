@@ -28,13 +28,6 @@ type PageData struct {
 	Body       string
 }
 
-type Foo2 struct {
-	UrlRelative string
-	ImagePath   string
-	Title       string
-	Snippet     string
-}
-
 func executeTemplateByName(templateName string, data interface{}) ([]byte, error) {
 	t, err := template.ParseGlob("templates/*")
 	if err != nil {
@@ -71,13 +64,11 @@ func postIndexEntry(e post.Entry) ([]byte, error) {
 		img = cfg.Image
 	}
 
-	var f Foo2
-	f.UrlRelative = e.SitePath
-	f.ImagePath = img
-	f.Title = e.Title
-	f.Snippet = e.Snippet
+	var data PageData
+	data.SiteConfig = cfg
+	data.Entry = e
 
-	return executeTemplateByName("postlink", &f)
+	return executeTemplateByName("postlink", &data)
 }
 
 func postIndexEntryKey(key string, configs []post.Entry) ([]byte, error) {
@@ -162,13 +153,6 @@ func expandBody(ent post.Entry, configs []post.Entry, data PageData) ([]byte, er
 }
 
 func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
-	/*
-		meta := ""
-		if ent.Image != cfg.Image {
-			meta = "<meta property=\"og:image\" content=\"" + ent.Image + "\" />\n  "
-		}
-	*/
-
 	var data PageData
 	data.SiteConfig = cfg
 	data.Entry = ent

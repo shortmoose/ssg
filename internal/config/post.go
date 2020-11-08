@@ -1,4 +1,4 @@
-package post
+package config
 
 import (
 	"bytes"
@@ -15,8 +15,8 @@ type SiteInfo struct {
 	DefaultImage string
 }
 
-// Entry is the structure used for a given web post entry.
-type Entry struct {
+// Post is the structure used for a given web post entry.
+type Post struct {
 	FilePath     string
 	SitePath     string
 	Type         string   `yaml:"type"`
@@ -41,8 +41,8 @@ func stripPageConfig(body []byte) []byte {
 	return append(body[:start], body[end+12:]...)
 }
 
-func getPageConfig(src string) (Entry, error) {
-	var cfg Entry
+func getPageConfig(src string) (Post, error) {
+	var cfg Post
 
 	body, err := ioutil.ReadFile(src)
 	if err != nil {
@@ -71,7 +71,7 @@ func getPageConfig(src string) (Entry, error) {
 }
 
 // GetPageConfig will parse the web post entry at filepath.
-func GetPageConfig(filepath, sitepath string, siteinfo SiteInfo) (Entry, error) {
+func GetPageConfig(filepath, sitepath string, siteinfo SiteInfo) (Post, error) {
 	cfg, err := getPageConfig(filepath)
 	if err != nil {
 		return cfg, err
@@ -104,7 +104,7 @@ func GetPageConfig(filepath, sitepath string, siteinfo SiteInfo) (Entry, error) 
 
 // ByDate should normally be used as part of sort. So
 // sort.Sort(ByDate([]Entry)).
-type ByDate []Entry
+type ByDate []Post
 
 func (s ByDate) Len() int {
 	return len(s)

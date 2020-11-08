@@ -7,24 +7,24 @@ import (
 	"github.com/shortmoose/ssg/internal/config"
 )
 
-func TestGetConfig(t *testing.T) {
+func TestGetSiteConfig(t *testing.T) {
 	type test struct {
 		input string
-		cfg   config.Config
+		cfg   config.Site
 		err   string
 	}
 
 	tests := []test{
 		{
 			input: "Fancy Feet",
-			cfg:   config.Config{},
+			cfg:   config.Site{},
 			err:   "cannot unmarshal",
 		},
 		{
 			input: `
 title: title-blah
 unknown: unknown-blah`,
-			cfg: config.Config{
+			cfg: config.Site{
 				Title: "title-blah",
 			},
 		},
@@ -35,7 +35,7 @@ image: image-blah
 url: url-blah
 author: author-blah
 image-url: image-url-blah`,
-			cfg: config.Config{
+			cfg: config.Site{
 				Title:    "title-blah",
 				Image:    "image-blah",
 				URL:      "url-blah",
@@ -46,7 +46,7 @@ image-url: image-url-blah`,
 	}
 
 	for _, tc := range tests {
-		cfg, err := config.GetConfig(strings.NewReader(tc.input))
+		cfg, err := config.GetSiteConfig(strings.NewReader(tc.input))
 		if err != nil {
 			if !strings.Contains(err.Error(), tc.err) {
 				t.Errorf("Error = %v", err)

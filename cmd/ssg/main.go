@@ -11,29 +11,23 @@ import (
 	"sort"
 
 	"github.com/shortmoose/ssg/internal/config"
-	"github.com/shortmoose/ssg/internal/post"
 	"github.com/shortmoose/ssg/internal/util"
 )
 
 var (
-	cfg config.Config
+	cfg config.Site
 )
 
-func postIndexEntry(e post.Entry) ([]byte, error) {
-	img := e.Image
-	if img == "" {
-		img = cfg.Image
-	}
-
+func postIndexEntry(e config.Post) ([]byte, error) {
 	var data util.PageData
 	data.SiteConfig = cfg
-	data.Entry = e
+	data.Post = e
 
 	return util.ExecuteTemplateByName("postlink", &data)
 }
 
-func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
-	ents := []post.Entry{}
+func buildIndex(path string, ent config.Post, configs []config.Post) error {
+	ents := []config.Post{}
 	for i := range configs {
 		if configs[i].Date != "" {
 			ents = append(ents, configs[i])
@@ -42,7 +36,7 @@ func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
 	if len(ents) == 0 {
 		return fmt.Errorf("Can't create index, no entries")
 	}
-	sort.Sort(post.ByDate(ents))
+	sort.Sort(config.ByDate(ents))
 
 	var cnt []byte
 	for _, e := range ents {
@@ -62,30 +56,21 @@ func buildIndex(path string, ent post.Entry, configs []post.Entry) error {
 	return nil
 }
 
-func expandBody(ent post.Entry, configs []post.Entry, data util.PageData) ([]byte, error) {
-	body, err := util.ExecuteTemplateGiven(string(ent.Content), data)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
-}
-
-func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
+func buildPage(dest string, ent config.Post, configs []config.Post) error {
 	var data util.PageData
 	data.SiteConfig = cfg
-	data.Entry = ent
+	data.Post = ent
 	data.Web = true
-	data.Pages = make(map[string]post.Entry)
+	data.Pages = make(map[string]config.Post)
 	for _, c := range configs {
 		data.Pages[c.SitePath] = c
 	}
 
-	b, err := expandBody(ent, configs, data)
-	data.Body = string(b)
+	bx, err := util.ExecuteTemplateGiven(string(ent.Content), data)
 	if err != nil {
 		return err
 	}
+	data.Body = string(bx)
 
 	body, err := util.ExecuteTemplateByName("pre", data)
 	if err != nil {
@@ -103,7 +88,7 @@ func buildPage(dest string, ent post.Entry, configs []post.Entry) error {
 	return nil
 }
 
-func validateImagesExist(configs []post.Entry) error {
+func validateImagesExist(configs []config.Post) error {
 	m := map[string]bool{}
 	for _, ent := range configs {
 		re := regexp.MustCompile(`/(img|pdf)/[^"']*`)
@@ -128,13 +113,13 @@ func validateImagesExist(configs []post.Entry) error {
 }
 
 func walk() error {
-	var siteinfo post.SiteInfo
+	var siteinfo config.SiteInfo
 	siteinfo.DefaultTitle = cfg.Title
 	siteinfo.DefaultImage = cfg.Image
 
-	var configs []post.Entry
+	var configs []config.Post
 	err := util.Walk("posts", func(path string, info os.FileInfo) error {
-		ent, err := post.GetPageConfig(path, path[5:], siteinfo)
+		ent, err := config.GetPageConfig(path, path[5:], siteinfo)
 		if err != nil {
 			return err
 		}
@@ -195,7 +180,7 @@ func main() {
 	}
 	defer handle.Close()
 
-	cfgTmp, err := config.GetConfig(handle)
+	cfgTmp, err := config.GetSiteConfig(handle)
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}

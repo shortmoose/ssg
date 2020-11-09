@@ -15,6 +15,7 @@ type Site struct {
 	URL      string `yaml:"url"`
 	Author   string `yaml:"author"`
 	ImageURL string `yaml:"image-url"`
+	Template string `yaml:"template"`
 }
 
 func GetSiteConfig(src io.Reader) (Site, error) {

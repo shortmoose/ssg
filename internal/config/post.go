@@ -11,17 +11,18 @@ import (
 
 // Post is the structure used for a given web post entry.
 type Post struct {
-	Type         string   `yaml:"type"`
-	Title        string   `yaml:"title"`
+	Template string `yaml:"template"`
+	Title    string `yaml:"title"`
+	Date     string `yaml:"date"`
+	Author   string `yaml:"author"`
+
+	RelatedPosts []string `yaml:"related"`
 	Snippet      string   `yaml:"snippet"`
 	Image        string   `yaml:"image"`
-	Date         string   `yaml:"date"`
-	RelatedPosts []string `yaml:"related"`
-	Author       string   `yaml:"author"`
-
-	FilePath string
-	SitePath string
-	Content  []byte
+	Type         string   `yaml:"type"`
+	FilePath     string
+	SitePath     string
+	Content      []byte
 }
 
 func stripPageConfig(body []byte) []byte {

@@ -62,6 +62,7 @@ func buildPage(dest string, ent config.Post, configs []config.Post) error {
 	data.Post = ent
 	data.Web = true
 	data.Pages = make(map[string]config.Post)
+	data.PagesList = configs
 	for _, c := range configs {
 		data.Pages[c.SitePath] = c
 	}

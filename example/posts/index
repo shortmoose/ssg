@@ -1,5 +1,4 @@
 <!-- CONFIG
-type: index
 CONFIG -->
 
-.
+{{range (sort2 .PagesList)}}{{template "postlink" .}}{{end}}

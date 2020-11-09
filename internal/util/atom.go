@@ -24,8 +24,20 @@ type PageData struct {
 
 	SiteConfig config.Site
 	Pages      map[string]config.Post
+	PagesList  []config.Post
 	Body       string
 	Web        bool
+}
+
+func Sort(configs []config.Post) []config.Post {
+	ents := []config.Post{}
+	for i := range configs {
+		if configs[i].Date != "" {
+			ents = append(ents, configs[i])
+		}
+	}
+	sort.Sort(config.ByDate(ents))
+	return ents
 }
 
 func ExecuteTemplateByName(templateName string, data interface{}) ([]byte, error) {
@@ -43,16 +55,23 @@ func ExecuteTemplateByName(templateName string, data interface{}) ([]byte, error
 }
 
 func ExecuteTemplateGiven(templateText string, data interface{}) ([]byte, error) {
-	t, err := template.ParseGlob("templates/*")
+	funcMap := template.FuncMap{
+		"sort2": Sort,
+	}
+
+	tmpl, err := template.New("x").Funcs(funcMap).Parse(templateText)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = tmpl.ParseGlob("templates/*")
 	if err != nil {
 		// TODO: There must be a better way to do this.
 		if !strings.Contains(err.Error(), "matches no files") {
+			log.Printf("%v", err)
 			return nil, err
 		}
-		t = template.New("zoo")
 	}
-
-	tmpl, err := t.New("x").Parse(templateText)
 
 	out := new(bytes.Buffer)
 	err = tmpl.ExecuteTemplate(out, "x", data)

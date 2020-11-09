@@ -141,6 +141,7 @@ func CreateAtomFeed(feed Feed, configs []config.Post) ([]byte, error) {
 
 	return body, nil
 }
+
 func buildPage(dest string, ent config.Post, configs []config.Post) error {
 	var data PageData
 	data.SiteConfig = cfg
@@ -158,7 +159,15 @@ func buildPage(dest string, ent config.Post, configs []config.Post) error {
 	}
 	data.Body = string(bx)
 
-	body, err := ExecuteTemplateByName("pre", data)
+	template := ent.Template
+	if template == "" {
+		template = cfg.Template
+		if template == "" {
+			log.Fatalf("No template name")
+		}
+	}
+
+	body, err := ExecuteTemplateByName(template, data)
 	if err != nil {
 		return err
 	}

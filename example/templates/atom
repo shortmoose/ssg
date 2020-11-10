@@ -2,8 +2,8 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>{{(siteConfig).Title}}</title>
   <link href="{{(siteConfig).URL}}/" />
-  <updated>{{(index (sort2 (allPosts)) 0).Date}}</updated>
+  <updated>{{(index (sort (allPosts)) 0).Date}}</updated>
   <id>{{(siteConfig).URL}}/</id>
-{{range (sort2 (allPosts))}}{{template "xmlentry" .}}{{end}}
+{{range (sort (allPosts))}}{{template "xmlentry" .}}{{end}}
 </feed>
 

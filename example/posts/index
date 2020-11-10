@@ -1,4 +1,4 @@
 <!-- CONFIG
 CONFIG -->
 
-{{range (sort2 (allPosts))}}{{template "postlink" .}}{{end}}
+{{range (sort (allPosts))}}{{template "postlink" .}}{{end}}

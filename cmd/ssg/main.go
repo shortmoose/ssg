@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	cfg config.Site
+	siteConfig config.Site
 )
 
 type PageData struct {
@@ -57,21 +57,18 @@ func ExecuteTemplateGiven(templateName, templateText string, data PageData) ([]b
 
 	funcMap := template.FuncMap{
 		"siteConfig": func() config.Site {
-			return cfg
+			return siteConfig
 		},
 		"post": func() config.Post {
-			log.Printf("Data Post: %v", data.Post.SitePath)
 			return data.Post
 		},
 		"getPost": func(key string) config.Post {
-			log.Printf("Data Post: %v", data.Post.SitePath)
 			return data.Pages[key]
 		},
 		"allPosts": func() []config.Post {
-			log.Printf("Data Post: %v", data.Post.SitePath)
 			return data.PagesList
 		},
-		"sort2":   Sort,
+		"sort":    Sort,
 		"recurse": recurse,
 	}
 
@@ -110,7 +107,7 @@ func buildPage(dest string, ent config.Post, configs []config.Post) error {
 
 	template := ent.Template
 	if template == "" {
-		template = cfg.Template
+		template = siteConfig.Template
 		if template == "" {
 			log.Fatalf("No template name")
 		}
@@ -121,8 +118,8 @@ func buildPage(dest string, ent config.Post, configs []config.Post) error {
 		return err
 	}
 
-	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
-	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
+	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(siteConfig.ImageURL+"/"))
+	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(siteConfig.ImageURL+"/"))
 
 	err = ioutil.WriteFile(dest, body, 0644)
 	if err != nil {
@@ -137,7 +134,7 @@ func validateImagesExist(configs []config.Post) error {
 	for _, ent := range configs {
 		re := regexp.MustCompile(`/(img|pdf)/[^"']*`)
 		for _, url := range re.FindAll([]byte(string(ent.Content)+" "+ent.Image), -1) {
-			urlstr := cfg.ImageURL + string(url)[4:]
+			urlstr := siteConfig.ImageURL + string(url)[4:]
 			m[urlstr] = true
 		}
 	}
@@ -198,7 +195,7 @@ func main() {
 		log.Fatalf("%v\n", err)
 	}
 
-	cfg = cfgTmp
+	siteConfig = cfgTmp
 
 	err = walk()
 	if err != nil {

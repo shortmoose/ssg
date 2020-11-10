@@ -7,10 +7,8 @@ CONFIG -->
 
 <p>Years ago</p>
 
-{{if .Web}}{{template "postlink" (index .Pages "/p2")}}{{end}}
-
-{{if ne "" ((index .Pages "/p2").SitePath)}}{{template "postlink" (index .Pages "/p2")}}{{end}}
+{{if ne (post).Template "atom"}}{{template "postlink" (getPost "/p2")}}{{end}}
 
 {{template "ad" .}}
 
-{{if .Web}}{{template "ad" .}}{{end}}
+{{if ne (post).Template "atom"}}{{template "ad" .}}{{end}}

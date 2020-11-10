@@ -15,6 +15,7 @@
 
   ]]></content>
 </entry>
+
 <entry>
   <title>Post 1</title>
   <link href="https://doesntexist.com/p1" />
@@ -26,13 +27,14 @@
 
 
 
-
-
-<a href="https://doesntexist.com/p1">This should link to this page.</a>
+<a href="/p1">This should link to this page.</a>
 
 
 
 
   ]]></content>
 </entry>
+
+
 </feed>
+

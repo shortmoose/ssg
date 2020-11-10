@@ -20,20 +20,11 @@ var (
 	cfg config.Site
 )
 
-// feed TODO
-type Feed struct {
-	SiteURL   string
-	SiteTitle string
-	SiteID    string
-	Author    string
-}
-
 type PageData struct {
 	config.Post
 
 	Pages     map[string]config.Post
 	PagesList []config.Post
-	Body      string
 }
 
 func Sort(configs []config.Post) []config.Post {
@@ -47,7 +38,7 @@ func Sort(configs []config.Post) []config.Post {
 	return ents
 }
 
-func ExecuteTemplateGiven(templateText string, data PageData) ([]byte, error) {
+func ExecuteTemplateGiven(templateName, templateText string, data PageData) ([]byte, error) {
 	var gtmp *template.Template
 	recurse := func(name string, ydata interface{}) (string, error) {
 		_, err := gtmp.New("y").Parse(name)
@@ -84,7 +75,7 @@ func ExecuteTemplateGiven(templateText string, data PageData) ([]byte, error) {
 		"recurse": recurse,
 	}
 
-	tmpl, err := template.New("x").Funcs(funcMap).Parse(templateText)
+	tmpl, err := template.New("body").Funcs(funcMap).Parse(templateText)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +91,7 @@ func ExecuteTemplateGiven(templateText string, data PageData) ([]byte, error) {
 	gtmp = tmpl
 
 	out := new(bytes.Buffer)
-	err = tmpl.ExecuteTemplate(out, "x", data)
+	err = tmpl.ExecuteTemplate(out, templateName, data.Post)
 	if err != nil {
 		return nil, err
 	}
@@ -117,12 +108,6 @@ func buildPage(dest string, ent config.Post, configs []config.Post) error {
 		data.Pages[c.SitePath] = c
 	}
 
-	bx, err := ExecuteTemplateGiven(string(ent.Content), data)
-	if err != nil {
-		return err
-	}
-	data.Body = string(bx)
-
 	template := ent.Template
 	if template == "" {
 		template = cfg.Template
@@ -131,7 +116,7 @@ func buildPage(dest string, ent config.Post, configs []config.Post) error {
 		}
 	}
 
-	body, err := ExecuteTemplateGiven("{{template \""+template+"\" .}}", data)
+	body, err := ExecuteTemplateGiven(template, string(ent.Content), data)
 	if err != nil {
 		return err
 	}

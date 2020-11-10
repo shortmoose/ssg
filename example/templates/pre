@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>{{if ne .Title ""}}{{.Title}}{{else}}{{.SiteConfig.Title}}{{end}}</title>
+  <title>{{if ne .Title ""}}{{.Title}}{{else}}{{(siteConfig).Title}}{{end}}</title>
 </head>
 <body>
 {{if ne .Title ""}}<h1>{{.Title}}</h1>{{end}}
-{{.Body}}
+{{template "body" .}}
 </body>
 </html>

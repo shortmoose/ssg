@@ -22,7 +22,7 @@ type Post struct {
 	Type         string   `yaml:"type"`
 	FilePath     string
 	SitePath     string
-	Content      []byte
+	Content      string
 }
 
 func stripPageConfig(body []byte) []byte {
@@ -55,7 +55,7 @@ func getPageConfig(src string) (Post, error) {
 		body = stripPageConfig(body)
 	}
 
-	cfg.Content = body
+	cfg.Content = string(body)
 	return cfg, nil
 }
 

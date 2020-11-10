@@ -31,11 +31,9 @@ type Feed struct {
 type PageData struct {
 	config.Post
 
-	SiteConfig config.Site
-	Pages      map[string]config.Post
-	PagesList  []config.Post
-	Body       string
-	Web        bool
+	Pages     map[string]config.Post
+	PagesList []config.Post
+	Body      string
 }
 
 func Sort(configs []config.Post) []config.Post {
@@ -49,23 +47,41 @@ func Sort(configs []config.Post) []config.Post {
 	return ents
 }
 
-func ExecuteTemplateByName(templateName string, data interface{}) ([]byte, error) {
-	t, err := template.ParseGlob("templates/*")
-	if err != nil {
-		return nil, err
+func ExecuteTemplateGiven(templateText string, data PageData) ([]byte, error) {
+	var gtmp *template.Template
+	recurse := func(name string, ydata interface{}) (string, error) {
+		_, err := gtmp.New("y").Parse(name)
+		if err != nil {
+			log.Fatalf("OOPS")
+		}
+
+		nout := new(bytes.Buffer)
+		err = gtmp.ExecuteTemplate(nout, "y", ydata)
+		if err != nil {
+			return "", err
+		}
+
+		return string(nout.Bytes()), err
 	}
 
-	out := new(bytes.Buffer)
-	err = t.ExecuteTemplate(out, templateName, data)
-	if err != nil {
-		log.Fatalf("Oops %s %v", templateName, err.Error())
-	}
-	return out.Bytes(), err
-}
-
-func ExecuteTemplateGiven(templateText string, data interface{}) ([]byte, error) {
 	funcMap := template.FuncMap{
-		"sort2": Sort,
+		"siteConfig": func() config.Site {
+			return cfg
+		},
+		"post": func() config.Post {
+			log.Printf("Data Post: %v", data.Post.SitePath)
+			return data.Post
+		},
+		"getPost": func(key string) config.Post {
+			log.Printf("Data Post: %v", data.Post.SitePath)
+			return data.Pages[key]
+		},
+		"allPosts": func() []config.Post {
+			log.Printf("Data Post: %v", data.Post.SitePath)
+			return data.PagesList
+		},
+		"sort2":   Sort,
+		"recurse": recurse,
 	}
 
 	tmpl, err := template.New("x").Funcs(funcMap).Parse(templateText)
@@ -81,6 +97,7 @@ func ExecuteTemplateGiven(templateText string, data interface{}) ([]byte, error)
 			return nil, err
 		}
 	}
+	gtmp = tmpl
 
 	out := new(bytes.Buffer)
 	err = tmpl.ExecuteTemplate(out, "x", data)
@@ -91,62 +108,9 @@ func ExecuteTemplateGiven(templateText string, data interface{}) ([]byte, error)
 	return out.Bytes(), err
 }
 
-func CreateAtomFeed(feed Feed, configs []config.Post) ([]byte, error) {
-	ents := []config.Post{}
-	for i := range configs {
-		if configs[i].Date != "" {
-			ents = append(ents, configs[i])
-		}
-	}
-	if len(ents) == 0 {
-		return nil, fmt.Errorf("Can't create XML feed, no entries")
-	}
-	sort.Sort(config.ByDate(ents))
-
-	s := ""
-	s += fmt.Sprintf("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
-	s += fmt.Sprintf("<feed xmlns=\"http://www.w3.org/2005/Atom\">\n")
-	s += fmt.Sprintf("  <title>%s</title>\n", feed.SiteTitle)
-	s += fmt.Sprintf("  <link href=\"%s/\" />\n", feed.SiteURL)
-	s += fmt.Sprintf("  <updated>%s</updated>\n", ents[0].Date)
-	s += fmt.Sprintf("  <id>%s</id>\n", feed.SiteID)
-
-	for _, e := range ents {
-		if e.Date != "" {
-			s += fmt.Sprintf("<entry>\n")
-			s += fmt.Sprintf("  <title>%s</title>\n", e.Title)
-			s += fmt.Sprintf("  <link href=\"%s%s\" />\n", feed.SiteURL, e.SitePath)
-			s += fmt.Sprintf("  <updated>%s</updated>\n", e.Date)
-			s += fmt.Sprintf("  <id>%s%s</id>\n", feed.SiteURL, e.SitePath)
-			s += fmt.Sprintf("  <author><name>%s</name></author>\n", feed.Author)
-			s += fmt.Sprintf("  <content type=\"html\"><![CDATA[\n")
-
-			var data PageData
-			data.Post = e
-			data.Pages = make(map[string]config.Post)
-
-			c, err := ExecuteTemplateGiven(string(e.Content), data)
-			if err != nil {
-				return nil, err
-			}
-
-			s += fmt.Sprintf("%s\n", c)
-			s += fmt.Sprintf("  ]]></content>\n")
-			s += fmt.Sprintf("</entry>\n")
-		}
-	}
-	s += fmt.Sprintf("</feed>\n")
-
-	body := []byte(s)
-
-	return body, nil
-}
-
 func buildPage(dest string, ent config.Post, configs []config.Post) error {
 	var data PageData
-	data.SiteConfig = cfg
 	data.Post = ent
-	data.Web = true
 	data.Pages = make(map[string]config.Post)
 	data.PagesList = configs
 	for _, c := range configs {
@@ -167,7 +131,7 @@ func buildPage(dest string, ent config.Post, configs []config.Post) error {
 		}
 	}
 
-	body, err := ExecuteTemplateByName(template, data)
+	body, err := ExecuteTemplateGiven("{{template \""+template+"\" .}}", data)
 	if err != nil {
 		return err
 	}
@@ -223,31 +187,9 @@ func walk() error {
 	}
 
 	for _, ent := range configs {
-		if ent.Type == "atom" {
-			var feed Feed
-			feed.SiteTitle = cfg.Title
-			feed.SiteURL = cfg.URL
-			feed.SiteID = cfg.URL + "/"
-			feed.Author = cfg.Author
-
-			body, err := CreateAtomFeed(feed, configs)
-			if err != nil {
-				return err
-			}
-
-			body = bytes.ReplaceAll(body, []byte("/img/"), []byte(cfg.ImageURL+"/"))
-			body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(cfg.ImageURL+"/"))
-			body = bytes.ReplaceAll(body, []byte("href=\"/"), []byte("href=\""+feed.SiteURL+"/"))
-
-			err = ioutil.WriteFile("website/posts"+ent.SitePath, body, 0644)
-			if err != nil {
-				return fmt.Errorf("WriteFile :%w", err)
-			}
-		} else {
-			err = buildPage("website/posts"+ent.SitePath, ent, configs)
-			if err != nil {
-				return fmt.Errorf("parsing %s: %w", ent.FilePath, err)
-			}
+		err = buildPage("website/posts"+ent.SitePath, ent, configs)
+		if err != nil {
+			return fmt.Errorf("parsing %s: %w", ent.FilePath, err)
 		}
 	}
 

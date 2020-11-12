@@ -16,13 +16,15 @@ type Post struct {
 	Date     string `yaml:"date"`
 	Author   string `yaml:"author"`
 
-	RelatedPosts []string `yaml:"related"`
-	Snippet      string   `yaml:"snippet"`
-	Image        string   `yaml:"image"`
-	Type         string   `yaml:"type"`
-	FilePath     string
-	SitePath     string
-	Content      string
+	RelatedPosts []string               `yaml:"related"`
+	Snippet      string                 `yaml:"snippet"`
+	Image        string                 `yaml:"image"`
+	Type         string                 `yaml:"type"`
+	Custom       map[string]interface{} `yaml:"custom"`
+
+	FilePath string
+	SitePath string
+	Content  string
 }
 
 func stripPageConfig(body []byte) []byte {

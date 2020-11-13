@@ -1,8 +1,9 @@
 <!-- CONFIG
 title: Post 2
-snippet: Post 2 snippet
 date: 2020-02-28T22:00:00Z
-image: https://avatars2.githubusercontent.com/u/68955854
+custom:
+  image: https://avatars2.githubusercontent.com/u/68955854
+  snippet: Post 2 snippet
 CONFIG -->
 
 <p>Post 2 Post 2 banana</p>

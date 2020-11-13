@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
@@ -22,25 +23,20 @@ func TestGetSiteConfig(t *testing.T) {
 		},
 		{
 			input: `
-title: title-blah
+template: title-blah
 unknown: unknown-blah`,
 			cfg: config.Site{
-				Title: "title-blah",
+				Template: "title-blah",
 			},
 		},
 		{
 			input: `
-title: title-blah
-image: image-blah
-url: url-blah
-author: author-blah
-image-url: image-url-blah`,
+template: title-blah
+custom:
+  image: image-blah`,
 			cfg: config.Site{
-				Title:    "title-blah",
-				Image:    "image-blah",
-				URL:      "url-blah",
-				Author:   "author-blah",
-				ImageURL: "image-url-blah",
+				Template: "title-blah",
+				Custom:   map[string]interface{}{"image": "image-blah"},
 			},
 		},
 	}
@@ -59,7 +55,7 @@ image-url: image-url-blah`,
 			continue
 		}
 
-		if tc.cfg != cfg {
+		if !reflect.DeepEqual(tc.cfg, cfg) {
 			t.Errorf("Expected = \n%#v, \nGot = \n%#v", tc.cfg, cfg)
 		}
 	}

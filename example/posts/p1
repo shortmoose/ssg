@@ -1,11 +1,10 @@
 <!-- CONFIG
 title: Post 1
-snippet: Years ago, I started to
-image: https://avatars2.githubusercontent.com/u/68955854
 date: 2020-02-27T22:00:00Z
 custom:
+  image: https://avatars2.githubusercontent.com/u/68955854
   description: "This is a description"
-  snippet: "This is the snippet"
+  snippet: Years ago, I started to
   doo:
     goo: noo
 CONFIG -->

@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>{{(siteConfig).Title}}</title>
-  <link href="{{(siteConfig).URL}}/" />
+  <title>{{(siteConfig).Custom.title}}</title>
+  <link href="{{(siteConfig).Custom.url}}/" />
   <updated>{{(index (sort (allPosts)) 0).Date}}</updated>
-  <id>{{(siteConfig).URL}}/</id>
-{{range (sort (allPosts))}}{{template "xmlentry" .}}{{end}}
+  <id>{{(siteConfig).Custom.url}}/</id>
+{{range (sort (allPosts))}}
+<entry>
+  <title>{{.Title}}</title>
+  <link href="{{(siteConfig).Custom.url}}{{.SitePath}}" />
+  <updated>{{.Date}}</updated>
+  <id>{{(siteConfig).Custom.url}}{{.SitePath}}</id>
+  <author><name>{{(siteConfig).Custom.author}}</name></author>
+  <content type="html"><![CDATA[
+{{recurse .Content .}}
+  ]]></content>
+</entry>
+{{end}}
 </feed>
 

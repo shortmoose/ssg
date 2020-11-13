@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>{{if ne .Title ""}}{{.Title}}{{else}}{{(siteConfig).Title}}{{end}}</title>
+  <title>{{if ne .Title ""}}{{.Title}}{{else}}{{(siteConfig).Custom.title}}{{end}}</title>
 </head>
 <body>
 {{if ne .Title ""}}<h1>{{.Title}}</h1>{{end}}

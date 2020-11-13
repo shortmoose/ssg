@@ -1,5 +1,6 @@
-title: Test Title
-image: https://avatars2.githubusercontent.com/u/68955854
-url: https://doesntexist.com
-author: me
 template: pre
+custom:
+  title: Test Title
+  image: https://avatars2.githubusercontent.com/u/68955854
+  url: https://doesntexist.com
+  author: me

@@ -1,9 +1,9 @@
 <entry>
   <title>{{.Title}}</title>
-  <link href="{{(siteConfig).URL}}{{.SitePath}}" />
+  <link href="{{(siteConfig).Custom.url}}{{.SitePath}}" />
   <updated>{{.Date}}</updated>
-  <id>{{(siteConfig).URL}}{{.SitePath}}</id>
-  <author><name>{{(siteConfig).Author}}</name></author>
+  <id>{{(siteConfig).Custom.url}}{{.SitePath}}</id>
+  <author><name>{{(siteConfig).Custom.author}}</name></author>
   <content type="html"><![CDATA[
 {{recurse .Content .}}
   ]]></content>

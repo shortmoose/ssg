@@ -16,8 +16,6 @@ type Post struct {
 	Date     string                 `yaml:"date"`
 	Custom   map[string]interface{} `yaml:"custom"`
 
-	Image string `yaml:"image"`
-
 	FilePath string
 	SitePath string
 	Content  string

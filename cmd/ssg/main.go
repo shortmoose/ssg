@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
-	"regexp"
 	"sort"
 	"strings"
 	"text/template"
@@ -118,36 +116,9 @@ func buildPage(dest string, ent config.Post, configs []config.Post) error {
 		return err
 	}
 
-	body = bytes.ReplaceAll(body, []byte("/img/"), []byte(siteConfig.ImageURL+"/"))
-	body = bytes.ReplaceAll(body, []byte("/pdf/"), []byte(siteConfig.ImageURL+"/"))
-
 	err = ioutil.WriteFile(dest, body, 0644)
 	if err != nil {
 		return fmt.Errorf("WriteFile :%w", err)
-	}
-
-	return nil
-}
-
-func validateImagesExist(configs []config.Post) error {
-	m := map[string]bool{}
-	for _, ent := range configs {
-		re := regexp.MustCompile(`/(img|pdf)/[^"']*`)
-		for _, url := range re.FindAll([]byte(string(ent.Content)+" "+ent.Image), -1) {
-			urlstr := siteConfig.ImageURL + string(url)[4:]
-			m[urlstr] = true
-		}
-	}
-
-	for s := range m {
-		res, err := http.Head(s)
-		if err != nil {
-			fmt.Printf("Error while looking for: %s\n", s)
-			return err
-		} else if res.StatusCode != 200 {
-			fmt.Printf("Error: %s returned status %d\n", s, res.StatusCode)
-			return fmt.Errorf("Blah")
-		}
 	}
 
 	return nil
@@ -173,11 +144,6 @@ func walk() error {
 		if err != nil {
 			return fmt.Errorf("parsing %s: %w", ent.FilePath, err)
 		}
-	}
-
-	err = validateImagesExist(configs)
-	if err != nil {
-		return err
 	}
 
 	return nil

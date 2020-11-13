@@ -12,8 +12,6 @@ import (
 type Site struct {
 	Template string                 `yaml:"template"`
 	Custom   map[string]interface{} `yaml:"custom"`
-
-	ImageURL string `yaml:"image-url"`
 }
 
 func GetSiteConfig(src io.Reader) (Site, error) {

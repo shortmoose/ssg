@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>{{(siteConfig).Title}}</title>
-  <link href="{{(siteConfig).URL}}/" />
+  <title>{{(siteConfig).Custom.title}}</title>
+  <link href="{{(siteConfig).Custom.url}}/" />
   <updated>{{(index (sort (allPosts)) 0).Date}}</updated>
-  <id>{{(siteConfig).URL}}/</id>
+  <id>{{(siteConfig).Custom.url}}/</id>
 {{range (sort (allPosts))}}{{template "xmlentry" .}}{{end}}
 </feed>
 

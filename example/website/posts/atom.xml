@@ -4,6 +4,7 @@
   <link href="https://doesntexist.com/" />
   <updated>2020-02-28T22:00:00Z</updated>
   <id>https://doesntexist.com/</id>
+
 <entry>
   <title>Post 2</title>
   <link href="https://doesntexist.com/p2" />
@@ -36,7 +37,6 @@ This is a description
 
   ]]></content>
 </entry>
-
 
 </feed>
 

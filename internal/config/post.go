@@ -11,16 +11,12 @@ import (
 
 // Post is the structure used for a given web post entry.
 type Post struct {
-	Template string `yaml:"template"`
-	Title    string `yaml:"title"`
-	Date     string `yaml:"date"`
-	Author   string `yaml:"author"`
+	Template string                 `yaml:"template"`
+	Title    string                 `yaml:"title"`
+	Date     string                 `yaml:"date"`
+	Custom   map[string]interface{} `yaml:"custom"`
 
-	RelatedPosts []string               `yaml:"related"`
-	Snippet      string                 `yaml:"snippet"`
-	Image        string                 `yaml:"image"`
-	Type         string                 `yaml:"type"`
-	Custom       map[string]interface{} `yaml:"custom"`
+	Image string `yaml:"image"`
 
 	FilePath string
 	SitePath string

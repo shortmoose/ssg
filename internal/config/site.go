@@ -10,12 +10,10 @@ import (
 
 // Entry is the structure used for a given web post entry.
 type Site struct {
-	Title    string `yaml:"title"`
-	Image    string `yaml:"image"`
-	URL      string `yaml:"url"`
-	Author   string `yaml:"author"`
+	Template string                 `yaml:"template"`
+	Custom   map[string]interface{} `yaml:"custom"`
+
 	ImageURL string `yaml:"image-url"`
-	Template string `yaml:"template"`
 }
 
 func GetSiteConfig(src io.Reader) (Site, error) {

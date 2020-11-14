@@ -19,7 +19,7 @@ jobs:
     - name: Get dependencies
       run: go get -v -t -d ./...
 
-    - name: Validate Formatting
+    - name: Validate formatting
       run: test -z $(find . -name "*.go" | xargs gofmt -s -l)
 
     - name: go vet
@@ -31,12 +31,12 @@ jobs:
     - name: Test
       run: go test -v ./...
 
-    - name: Test
+    - name: e2e Test
       run: ./test
 
     - name: Validate no diffs were generated
-      run: test -z $(git status --porcelain)
+      run: test -z "$(git status --porcelain)"
 
-    - name: Lint Check
+    - name: Lint check
       run: go get -u golang.org/x/lint/golint; golint ./...
 

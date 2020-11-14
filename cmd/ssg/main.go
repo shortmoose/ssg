@@ -16,16 +16,11 @@ import (
 
 var (
 	siteConfig config.Site
+	postList   []config.Post
+	postMap    map[string]config.Post
 )
 
-type PageData struct {
-	config.Post
-
-	Pages     map[string]config.Post
-	PagesList []config.Post
-}
-
-func Sort(configs []config.Post) []config.Post {
+func sortPosts(configs []config.Post) []config.Post {
 	ents := []config.Post{}
 	for i := range configs {
 		if configs[i].Date != "" {
@@ -36,111 +31,111 @@ func Sort(configs []config.Post) []config.Post {
 	return ents
 }
 
-func ExecuteTemplateGiven(templateName, templateText string, data PageData) ([]byte, error) {
-	var gtmp *template.Template
-	recurse := func(name string, ydata interface{}) (string, error) {
-		_, err := gtmp.New("y").Parse(name)
-		if err != nil {
-			log.Fatalf("OOPS")
-		}
-
-		nout := new(bytes.Buffer)
-		err = gtmp.ExecuteTemplate(nout, "y", ydata)
-		if err != nil {
-			return "", err
-		}
-
-		return string(nout.Bytes()), err
+func recurse(tmpl *template.Template, name string, data interface{}) (string, error) {
+	_, err := tmpl.New("y").Parse(name)
+	if err != nil {
+		return "", fmt.Errorf("parsing recursive template: %w", err)
 	}
 
-	funcMap := template.FuncMap{
+	out := new(bytes.Buffer)
+	err = tmpl.ExecuteTemplate(out, "y", data)
+	if err != nil {
+		return "", fmt.Errorf("executing recursive template: %w", err)
+	}
+
+	return string(out.Bytes()), err
+}
+
+func createFuncMap(post config.Post, tmpl **template.Template) template.FuncMap {
+	return template.FuncMap{
 		"siteConfig": func() config.Site {
 			return siteConfig
 		},
 		"post": func() config.Post {
-			return data.Post
+			return post
 		},
 		"getPost": func(key string) config.Post {
-			return data.Pages[key]
+			return postMap[key]
 		},
 		"allPosts": func() []config.Post {
-			return data.PagesList
+			return postList
 		},
-		"sort":    Sort,
-		"recurse": recurse,
+		"sort": sortPosts,
+		"recurse": func(text string, data interface{}) (string, error) {
+			return recurse(*tmpl, text, data)
+		},
 	}
+}
 
+func executeTemplate(templateName, templateText string, ent config.Post) ([]byte, error) {
+	var gtmp *template.Template
+	funcMap := createFuncMap(ent, &gtmp)
 	tmpl, err := template.New("body").Funcs(funcMap).Parse(templateText)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parsing template '%v': %w", ent.FilePath, err)
 	}
 
 	_, err = tmpl.ParseGlob("templates/*")
 	if err != nil {
 		// TODO: There must be a better way to do this.
 		if !strings.Contains(err.Error(), "matches no files") {
-			log.Printf("%v", err)
-			return nil, err
+			return nil, fmt.Errorf("parsing templates/*: %w", err)
 		}
 	}
 	gtmp = tmpl
 
 	out := new(bytes.Buffer)
-	err = tmpl.ExecuteTemplate(out, templateName, data.Post)
+	err = tmpl.ExecuteTemplate(out, templateName, ent)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("executing template '%v': %w", ent.FilePath, err)
 	}
 
 	return out.Bytes(), err
 }
 
-func buildPage(dest string, ent config.Post, configs []config.Post) error {
-	var data PageData
-	data.Post = ent
-	data.Pages = make(map[string]config.Post)
-	data.PagesList = configs
-	for _, c := range configs {
-		data.Pages[c.SitePath] = c
-	}
-
+func buildPage(dest string, ent config.Post) error {
 	template := ent.Template
 	if template == "" {
 		template = siteConfig.Template
 		if template == "" {
-			log.Fatalf("No template name")
+			return fmt.Errorf("no template name '%v'", ent.FilePath)
 		}
 	}
 
-	body, err := ExecuteTemplateGiven(template, string(ent.Content), data)
+	body, err := executeTemplate(template, string(ent.Content), ent)
 	if err != nil {
-		return err
+		return fmt.Errorf("executing template '%v': %w", ent.FilePath, err)
 	}
 
 	err = ioutil.WriteFile(dest, body, 0644)
 	if err != nil {
-		return fmt.Errorf("WriteFile :%w", err)
+		return fmt.Errorf("writing file '%v': %w", dest, err)
 	}
 
 	return nil
 }
 
 func walk() error {
-	var configs []config.Post
 	err := util.Walk("posts", func(path string, info os.FileInfo) error {
 		ent, err := config.GetPageConfig(path, path[5:])
 		if err != nil {
-			return err
+			return fmt.Errorf("getting page config '%v': %w", path, err)
 		}
 
-		configs = append(configs, ent)
+		postList = append(postList, ent)
 		return nil
 	})
 	if err != nil {
 		return err
 	}
 
-	for _, ent := range configs {
-		err = buildPage("website/posts"+ent.SitePath, ent, configs)
+	postMap = make(map[string]config.Post)
+	for _, c := range postList {
+		postMap[c.SitePath] = c
+	}
+
+	for _, ent := range postList {
+		err = buildPage("website/posts"+ent.SitePath, ent)
 		if err != nil {
 			return fmt.Errorf("parsing %s: %w", ent.FilePath, err)
 		}
@@ -165,6 +160,6 @@ func main() {
 
 	err = walk()
 	if err != nil {
-		log.Fatalf("%v\n", err)
+		log.Fatalf("%+v", err)
 	}
 }

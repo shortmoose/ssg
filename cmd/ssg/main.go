@@ -31,6 +31,18 @@ func sortPosts(configs []config.Post) []config.Post {
 	return ents
 }
 
+func filterPosts(configs []config.Post, label string) []config.Post {
+	ents := []config.Post{}
+	for _, c := range configs {
+		for _, l := range c.Labels {
+			if l == label {
+				ents = append(ents, c)
+			}
+		}
+	}
+	return ents
+}
+
 func recurse(tmpl *template.Template, name string, data interface{}) (string, error) {
 	_, err := tmpl.New("y").Parse(name)
 	if err != nil {
@@ -60,7 +72,8 @@ func createFuncMap(post config.Post, tmpl **template.Template) template.FuncMap 
 		"allPosts": func() []config.Post {
 			return postList
 		},
-		"sort": sortPosts,
+		"sort":   sortPosts,
+		"filter": filterPosts,
 		"recurse": func(text string, data interface{}) (string, error) {
 			return recurse(*tmpl, text, data)
 		},

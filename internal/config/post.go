@@ -14,6 +14,7 @@ type Post struct {
 	Template string                 `yaml:"template"`
 	Title    string                 `yaml:"title"`
 	Date     string                 `yaml:"date"`
+	Labels   []string               `yaml:"labels"`
 	Custom   map[string]interface{} `yaml:"custom"`
 
 	FilePath string

@@ -83,7 +83,8 @@ func createFuncMap(post config.Post, tmpl **template.Template) template.FuncMap 
 func executeTemplate(templateName, templateText string, ent config.Post) ([]byte, error) {
 	var gtmp *template.Template
 	funcMap := createFuncMap(ent, &gtmp)
-	tmpl, err := template.New("body").Funcs(funcMap).Parse(templateText)
+	tmpl, err := template.New("body").Option("missingkey=error").
+		Funcs(funcMap).Parse(templateText)
 	if err != nil {
 		return nil, fmt.Errorf("parsing template '%v': %w", ent.FilePath, err)
 	}

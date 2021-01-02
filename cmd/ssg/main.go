@@ -43,6 +43,13 @@ func filterPosts(configs []config.Post, label string) []config.Post {
 	return ents
 }
 
+func topNPosts(configs []config.Post, count int) []config.Post {
+	if len(configs) > count {
+		return configs[:count]
+	}
+	return configs
+}
+
 func recurse(tmpl *template.Template, name string, data interface{}) (string, error) {
 	_, err := tmpl.New("y").Parse(name)
 	if err != nil {
@@ -74,6 +81,7 @@ func createFuncMap(post config.Post, tmpl **template.Template) template.FuncMap 
 		},
 		"sort":   sortPosts,
 		"filter": filterPosts,
+		"topN":   topNPosts,
 		"recurse": func(text string, data interface{}) (string, error) {
 			return recurse(*tmpl, text, data)
 		},

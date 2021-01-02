@@ -17,26 +17,5 @@
   ]]></content>
 </entry>
 
-<entry>
-  <title>Post 1</title>
-  <link href="https://doesntexist.com/p1" />
-  <updated>2020-02-27T22:00:00Z</updated>
-  <id>https://doesntexist.com/p1</id>
-  <author><name>me</name></author>
-  <content type="html"><![CDATA[
-This is a description
-
-<p>Years ago</p>
-
-
-
-<a href="/p1">This should link to this page.</a>
-
-
-
-
-  ]]></content>
-</entry>
-
 </feed>
 

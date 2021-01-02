@@ -4,7 +4,7 @@
   <link href="{{(siteConfig).Custom.url}}/" />
   <updated>{{(index (sort (allPosts)) 0).Date}}</updated>
   <id>{{(siteConfig).Custom.url}}/</id>
-{{range (sort (allPosts))}}
+{{range (topN (sort (allPosts)) 1)}}
 <entry>
   <title>{{.Title}}</title>
   <link href="{{(siteConfig).Custom.url}}{{.SitePath}}" />

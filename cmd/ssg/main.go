@@ -6,11 +6,11 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"sort"
 	"strings"
 	"text/template"
 
 	"github.com/shortmoose/ssg/internal/config"
+	"github.com/shortmoose/ssg/internal/funcs"
 	"github.com/shortmoose/ssg/internal/util"
 )
 
@@ -19,36 +19,6 @@ var (
 	postList   []config.Post
 	postMap    map[string]config.Post
 )
-
-func sortPosts(configs []config.Post) []config.Post {
-	ents := []config.Post{}
-	for i := range configs {
-		if configs[i].Date != "" {
-			ents = append(ents, configs[i])
-		}
-	}
-	sort.Sort(config.ByDate(ents))
-	return ents
-}
-
-func filterPosts(configs []config.Post, label string) []config.Post {
-	ents := []config.Post{}
-	for _, c := range configs {
-		for _, l := range c.Labels {
-			if l == label {
-				ents = append(ents, c)
-			}
-		}
-	}
-	return ents
-}
-
-func topNPosts(configs []config.Post, count int) []config.Post {
-	if len(configs) > count {
-		return configs[:count]
-	}
-	return configs
-}
 
 func recurse(tmpl *template.Template, name string, data interface{}) (string, error) {
 	_, err := tmpl.New("y").Parse(name)
@@ -79,9 +49,10 @@ func createFuncMap(post config.Post, tmpl **template.Template) template.FuncMap 
 		"allPosts": func() []config.Post {
 			return postList
 		},
-		"sort":   sortPosts,
-		"filter": filterPosts,
-		"topN":   topNPosts,
+		"sort":    funcs.SortPosts,
+		"filter":  funcs.FilterPosts,
+		"exclude": funcs.ExcludePosts,
+		"topN":    funcs.TopNPosts,
 		"recurse": func(text string, data interface{}) (string, error) {
 			return recurse(*tmpl, text, data)
 		},

@@ -18,3 +18,5 @@ CONFIG -->
 {{template "ad" .}}
 
 {{if ne (post).Template "atom"}}{{template "ad" .}}{{end}}
+
+<p><a href="https://foo.test.com/wrap?u={{(escape (siteConfig).Custom.url)}}{{(escape .SitePath)}}&t={{(escape "Blah Blah")}}">Link</a></p>

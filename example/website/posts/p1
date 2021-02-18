@@ -18,5 +18,7 @@ This is a description
 <a href="/p1">This should link to this page.</a>
 
 
+<p><a href="https://foo.test.com/wrap?u=https%3A%2F%2Fdoesntexist.com%2Fp1&t=Blah+Blah">Link</a></p>
+
 </body>
 </html>

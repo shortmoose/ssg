@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 	"text/template"
@@ -48,6 +49,9 @@ func createFuncMap(post config.Post, tmpl **template.Template) template.FuncMap 
 		},
 		"allPosts": func() []config.Post {
 			return postList
+		},
+		"escape": func(str string) string {
+			return url.QueryEscape(str)
 		},
 		"sort":    funcs.SortPosts,
 		"filter":  funcs.FilterPosts,

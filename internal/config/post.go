@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Post is the structure used for a given web post entry.

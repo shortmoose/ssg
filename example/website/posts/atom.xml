@@ -2,17 +2,23 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>Test Title</title>
   <link href="https://doesntexist.com/" />
-  <updated>2020-02-28T22:00:00Z</updated>
+  <updated>2025-02-28T22:00:00Z</updated>
   <id>https://doesntexist.com/</id>
 
 <entry>
-  <title>Post 2</title>
-  <link href="https://doesntexist.com/p2" />
-  <updated>2020-02-28T22:00:00Z</updated>
-  <id>https://doesntexist.com/p2</id>
+  <title>Post 3</title>
+  <link href="https://doesntexist.com/p3" />
+  <updated>2025-02-28T22:00:00Z</updated>
+  <id>https://doesntexist.com/p3</id>
   <author><name>me</name></author>
   <content type="html"><![CDATA[
-<p>Post 2 Post 2 banana</p>
+<p>This is cool.</p>
+<h2>Heading</h2>
+<p>And
+This
+is
+a
+paragraph</p>
 
   ]]></content>
 </entry>

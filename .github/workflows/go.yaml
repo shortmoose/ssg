@@ -19,7 +19,6 @@ jobs:
       run: |
         go mod tidy
         git diff --exit-code go.mod go.sum
-      continue-on-error: true
 
     - name: Validate formatting
       run: test -z $(find . -name "*.go" | xargs gofmt -s -l)
@@ -33,4 +32,5 @@ jobs:
     - name: e2e Test, validate no diffs
       run: |
         ./test
+        git status
         test -z "$(git status --porcelain)"

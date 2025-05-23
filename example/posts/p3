@@ -1,0 +1,18 @@
+<!-- CONFIG
+title: Post 3
+date: 2025-02-28T22:00:00Z
+parser: markdown
+custom:
+  image: https://avatars2.githubusercontent.com/u/68955854
+  snippet: Post 3 snippet
+CONFIG -->
+
+This is cool.
+
+## Heading
+
+And
+This
+is
+a
+paragraph

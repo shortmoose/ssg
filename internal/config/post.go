@@ -3,10 +3,10 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"time"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Post is the structure used for a given web post entry.
@@ -36,7 +36,7 @@ func stripPageConfig(body []byte) []byte {
 func getPageConfig(src string) (Post, error) {
 	var cfg Post
 
-	body, err := ioutil.ReadFile(src)
+	body, err := os.ReadFile(src)
 	if err != nil {
 		return cfg, fmt.Errorf("reading file %s: %w", src, err)
 	}

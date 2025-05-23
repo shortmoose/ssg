@@ -3,9 +3,8 @@ package config
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Entry is the structure used for a given web post entry.
@@ -17,7 +16,7 @@ type Site struct {
 func GetSiteConfig(src io.Reader) (Site, error) {
 	var cfg Site
 
-	body, err := ioutil.ReadAll(src)
+	body, err := io.ReadAll(src)
 	if err != nil {
 		return cfg, fmt.Errorf("reading file %s: %w", src, err)
 	}

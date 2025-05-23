@@ -33,4 +33,5 @@ jobs:
     - name: e2e Test, validate no diffs
       run: |
         ./test
+        git status
         test -z "$(git status --porcelain)"

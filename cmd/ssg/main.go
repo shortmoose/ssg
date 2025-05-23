@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -33,7 +32,7 @@ func recurse(tmpl *template.Template, name string, data interface{}) (string, er
 		return "", fmt.Errorf("executing recursive template: %w", err)
 	}
 
-	return string(out.Bytes()), err
+	return out.String(), err
 }
 
 func createFuncMap(post config.Post, tmpl **template.Template) template.FuncMap {
@@ -104,7 +103,7 @@ func buildPage(dest string, ent config.Post) error {
 		return fmt.Errorf("executing template '%v': %w", ent.FilePath, err)
 	}
 
-	err = ioutil.WriteFile(dest, body, 0644)
+	err = os.WriteFile(dest, body, 0644)
 	if err != nil {
 		return fmt.Errorf("writing file '%v': %w", dest, err)
 	}
@@ -146,7 +145,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}
-	defer handle.Close()
+	defer func() { _ = handle.Close() }()
 
 	cfgTmp, err := config.GetSiteConfig(handle)
 	if err != nil {

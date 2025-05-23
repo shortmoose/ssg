@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/yuin/goldmark"
 	"gopkg.in/yaml.v3"
 )
 
@@ -14,6 +15,7 @@ type Post struct {
 	Template string                 `yaml:"template"`
 	Title    string                 `yaml:"title"`
 	Date     string                 `yaml:"date"`
+	Parser   string                 `yaml:"parser"`
 	Labels   []string               `yaml:"labels"`
 	Custom   map[string]interface{} `yaml:"custom"`
 
@@ -33,12 +35,12 @@ func stripPageConfig(body []byte) []byte {
 	return append(body[:start], body[end+12:]...)
 }
 
-func getPageConfig(src string) (Post, error) {
+func getPageConfig(filepath string) (Post, error) {
 	var cfg Post
 
-	body, err := os.ReadFile(src)
+	body, err := os.ReadFile(filepath)
 	if err != nil {
-		return cfg, fmt.Errorf("reading file %s: %w", src, err)
+		return cfg, fmt.Errorf("reading file %s: %w", filepath, err)
 	}
 
 	start := bytes.Index(body, []byte("<!-- CONFIG"))
@@ -52,7 +54,18 @@ func getPageConfig(src string) (Post, error) {
 		body = stripPageConfig(body)
 	}
 
-	cfg.Content = string(body)
+	if cfg.Parser == "markdown" {
+		// Convert Markdown to HTML
+		var buf bytes.Buffer
+		err = goldmark.Convert(body, &buf)
+		if err != nil {
+			fmt.Printf("Error converting markdown to HTML: %v\n", err)
+			os.Exit(1)
+		}
+		cfg.Content = buf.String()
+	} else {
+		cfg.Content = string(body)
+	}
 	return cfg, nil
 }
 

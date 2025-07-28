@@ -1,7 +1,9 @@
 #!/bin/bash
 
-rm -fr example/website
+set -e -x
 
+rm -fr example/website
 mkdir -p example/website/posts/
 
-cd example && ../ssg; cd ..
+cd example
+../ssg

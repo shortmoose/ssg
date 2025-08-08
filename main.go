@@ -141,6 +141,8 @@ func walk() error {
 }
 
 func main() {
+	fmt.Printf("Version %s\n", version)
+
 	handle, err := os.Open("ssg.yaml")
 	if err != nil {
 		log.Fatalf("%v\n", err)
